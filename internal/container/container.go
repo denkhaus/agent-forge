@@ -10,6 +10,7 @@ import (
 	"github.com/denkhaus/agentforge/internal/git"
 	"github.com/denkhaus/agentforge/internal/github"
 	"github.com/denkhaus/agentforge/internal/logger"
+	"github.com/denkhaus/agentforge/internal/prompts"
 	"github.com/denkhaus/agentforge/internal/providers"
 	"github.com/denkhaus/agentforge/internal/session"
 	"github.com/denkhaus/agentforge/internal/tui"
@@ -112,6 +113,11 @@ func Setup(cfg *config.Config) *do.Injector {
 	do.Provide(newInjector, func(i *do.Injector) (types.TUIManager, error) {
 		log := do.MustInvoke[*zap.Logger](i)
 		return tui.NewManager(log), nil
+	})
+
+	// Register Prompt service
+	do.Provide(newInjector, func(i *do.Injector) (prompts.PromptService, error) {
+		return prompts.NewPromptService(), nil
 	})
 
 	return newInjector

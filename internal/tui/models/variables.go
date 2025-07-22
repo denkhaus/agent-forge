@@ -89,7 +89,7 @@ func (m *VariablesModel) Init() tea.Cmd {
 }
 
 // Update handles messages for the variables model
-func (m *VariablesModel) Update(msg tea.Msg) (*VariablesModel, tea.Cmd) {
+func (m *VariablesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {

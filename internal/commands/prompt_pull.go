@@ -57,7 +57,11 @@ func HandlePromptPull() cli.ActionFunc {
 			zap.String("version", version),
 			zap.Bool("force", force))
 
-		promptService := getPromptService()
+		promptService, err := getPromptServiceFromDI(ctx.DIContainer)
+		if err != nil {
+			log.Warn("Failed to get prompt service from DI, using direct instantiation", zap.Error(err))
+			promptService = getPromptService()
+		}
 		
 		// Pull the prompt using the prompt service
 		fmt.Printf("Pulling prompt from %s", repo)
@@ -66,7 +70,7 @@ func HandlePromptPull() cli.ActionFunc {
 		}
 		fmt.Println("...")
 
-		err := promptService.PullPrompt(repo, version, force)
+		err = promptService.PullPrompt(repo, version, force)
 		if err != nil {
 			return fmt.Errorf("failed to pull prompt: %w", err)
 		}

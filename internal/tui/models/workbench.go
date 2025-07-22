@@ -44,34 +44,34 @@ type WorkbenchModel struct {
 	promptName string
 	activeTab  TabType
 	logger     *zap.Logger
-	
+
 	// UI dimensions
 	width  int
 	height int
-	
+
 	// Sub-models
-	editorModel    *EditorModel
+	editorModel    *editorModel
 	variablesModel *VariablesModel
-	testModel      *TestModel
-	optimizeModel  *OptimizeModel
-	
+	testModel      *testModel
+	optimizeModel  *optimizeModel
+
 	// UI components
 	help help.Model
 	keys keyMap
-	
+
 	// State
 	quitting bool
 }
 
 // keyMap defines the key bindings for the workbench
 type keyMap struct {
-	Tab        key.Binding
-	ShiftTab   key.Binding
-	Enter      key.Binding
-	Escape     key.Binding
-	Quit       key.Binding
-	Help       key.Binding
-	Save       key.Binding
+	Tab      key.Binding
+	ShiftTab key.Binding
+	Enter    key.Binding
+	Escape   key.Binding
+	Quit     key.Binding
+	Help     key.Binding
+	Save     key.Binding
 }
 
 // ShortHelp returns the short help for the key map
@@ -120,13 +120,13 @@ func NewWorkbenchModel(promptName string, logger *zap.Logger) *WorkbenchModel {
 			key.WithHelp("ctrl+s", "save"),
 		),
 	}
-	
+
 	// Initialize sub-models
 	editorModel := NewEditorModel(promptName, logger)
 	variablesModel := NewVariablesModel(promptName, logger)
 	testModel := NewTestModel(promptName, logger)
 	optimizeModel := NewOptimizeModel(promptName, logger)
-	
+
 	return &WorkbenchModel{
 		promptName:     promptName,
 		activeTab:      EditorTab,
@@ -144,71 +144,83 @@ func NewWorkbenchModel(promptName string, logger *zap.Logger) *WorkbenchModel {
 // Init initializes the workbench model
 func (m *WorkbenchModel) Init() tea.Cmd {
 	m.logger.Info("Initializing prompt workbench", zap.String("prompt", m.promptName))
-	
+
 	// Initialize all sub-models
 	var cmds []tea.Cmd
 	cmds = append(cmds, m.editorModel.Init())
 	cmds = append(cmds, m.variablesModel.Init())
 	cmds = append(cmds, m.testModel.Init())
 	cmds = append(cmds, m.optimizeModel.Init())
-	
+
 	return tea.Batch(cmds...)
 }
 
 // Update handles messages and updates the model
 func (m *WorkbenchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
+
 	var cmds []tea.Cmd
-	
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
 		m.help.Width = msg.Width
-		
+
 		// Update sub-models with new dimensions
 		m.editorModel.SetSize(msg.Width, msg.Height-6) // Reserve space for tabs and help
 		m.variablesModel.SetSize(msg.Width, msg.Height-6)
 		m.testModel.SetSize(msg.Width, msg.Height-6)
 		m.optimizeModel.SetSize(msg.Width, msg.Height-6)
-		
+
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			m.quitting = true
 			return m, tea.Quit
-			
+
 		case key.Matches(msg, m.keys.Tab):
 			m.nextTab()
-			
+
 		case key.Matches(msg, m.keys.ShiftTab):
 			m.prevTab()
-			
+
 		case key.Matches(msg, m.keys.Save):
 			// TODO: Implement save functionality
 			m.logger.Info("Save requested")
-			
+
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		}
 	}
-	
+
 	// Update the active tab's model
 	switch m.activeTab {
 	case EditorTab:
-		m.editorModel, cmd = m.editorModel.Update(msg)
+		updatedModel, cmd := m.editorModel.Update(msg)
+		if editorModel, ok := updatedModel.(*editorModel); ok {
+			m.editorModel = editorModel
+		}
 		cmds = append(cmds, cmd)
 	case VariablesTab:
-		m.variablesModel, cmd = m.variablesModel.Update(msg)
+		updatedModel, cmd := m.variablesModel.Update(msg)
+		if variablesModel, ok := updatedModel.(*VariablesModel); ok {
+			m.variablesModel = variablesModel
+		}
 		cmds = append(cmds, cmd)
 	case TestTab:
-		m.testModel, cmd = m.testModel.Update(msg)
+		updatedModel, cmd := m.testModel.Update(msg)
+		if testModel, ok := updatedModel.(*testModel); ok {
+			m.testModel = testModel
+		}
 		cmds = append(cmds, cmd)
 	case OptimizeTab:
-		m.optimizeModel, cmd = m.optimizeModel.Update(msg)
+		updatedModel, cmd := m.optimizeModel.Update(msg)
+		if optimizeModel, ok := updatedModel.(*optimizeModel); ok {
+			m.optimizeModel = optimizeModel
+		}
 		cmds = append(cmds, cmd)
 	}
-	
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -217,19 +229,19 @@ func (m *WorkbenchModel) View() string {
 	if m.quitting {
 		return "Thanks for using AgentForge Prompt Workbench!\n"
 	}
-	
+
 	// Render header
 	header := m.renderHeader()
-	
+
 	// Render tabs
 	tabs := m.renderTabs()
-	
+
 	// Render active tab content
 	content := m.renderActiveTab()
-	
+
 	// Render help
 	helpView := m.help.View(m.keys)
-	
+
 	// Combine all parts
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -243,7 +255,7 @@ func (m *WorkbenchModel) View() string {
 // renderHeader renders the workbench header
 func (m *WorkbenchModel) renderHeader() string {
 	title := fmt.Sprintf("AgentForge Prompt Workbench - %s", m.promptName)
-	
+
 	// Use safe lipgloss header
 	return components.LipglossHeader(title, m.width)
 }
@@ -251,14 +263,14 @@ func (m *WorkbenchModel) renderHeader() string {
 // renderTabs renders the tab navigation
 func (m *WorkbenchModel) renderTabs() string {
 	var tabs []string
-	
+
 	for i := EditorTab; i <= OptimizeTab; i++ {
 		tab := i.String()
 		// Use safe tab styling
 		styledTab := components.LipglossTab(tab, i == m.activeTab)
 		tabs = append(tabs, styledTab)
 	}
-	
+
 	return lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
 }
 
