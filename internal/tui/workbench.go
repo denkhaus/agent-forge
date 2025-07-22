@@ -3,11 +3,11 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/denkhaus/agentforge/internal/tui/models"
 	"go.uber.org/zap"
 )
 
 // NewPromptWorkbench creates a new prompt workbench model
 func NewPromptWorkbench(promptName string, logger *zap.Logger) tea.Model {
-	return models.NewWorkbenchModel(promptName, logger)
+	// Use enhanced WorkbenchV3 with professional patterns
+	return NewWorkbenchV3(promptName, logger)
 }
