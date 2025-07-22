@@ -39,7 +39,11 @@ func HandlePromptList() cli.ActionFunc {
 			zap.Int("min_stars", minStars),
 			zap.Bool("local_only", localOnly))
 
-		promptService := getPromptService()
+		promptService, err := getPromptServiceFromDI(ctx.DIContainer)
+		if err != nil {
+			log.Warn("Failed to get prompt service from DI, using direct instantiation", zap.Error(err))
+			promptService = getPromptService()
+		}
 		
 		if localOnly {
 			// List local prompts

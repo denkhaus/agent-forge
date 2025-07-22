@@ -55,7 +55,11 @@ func HandlePromptRun() cli.ActionFunc {
 			zap.String("output", output),
 			zap.Bool("interactive", interactive))
 
-		promptService := getPromptService()
+		promptService, err := getPromptServiceFromDI(ctx.DIContainer)
+		if err != nil {
+			log.Warn("Failed to get prompt service from DI, using direct instantiation", zap.Error(err))
+			promptService = getPromptService()
+		}
 		
 		// Load prompt data
 		promptData, err := promptService.LoadPromptData(name)
@@ -70,8 +74,11 @@ func HandlePromptRun() cli.ActionFunc {
 			// Launch interactive variable setter
 			fmt.Println("Interactive mode - launching variable editor...")
 			
-			tui := getTUIModule()
-			err = tui.RunPromptVariableEditor(name, promptData)
+			tuiManager, err := getTUIManagerFromDI(ctx.DIContainer)
+			if err != nil {
+				return fmt.Errorf("failed to get TUI manager: %w", err)
+			}
+			err = tuiManager.RunPromptVariableEditor(name, promptData)
 			if err != nil {
 				return fmt.Errorf("failed to run variable editor: %w", err)
 			}

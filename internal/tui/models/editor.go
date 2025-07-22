@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// EditorModel handles prompt editing functionality
-type EditorModel struct {
+// editorModel handles prompt editing functionality (private implementation)
+type editorModel struct {
 	promptName string
 	logger     *zap.Logger
 	
@@ -28,7 +28,7 @@ type EditorModel struct {
 }
 
 // NewEditorModel creates a new editor model
-func NewEditorModel(promptName string, logger *zap.Logger) *EditorModel {
+func NewEditorModel(promptName string, logger *zap.Logger) *editorModel {
 	// Initialize textarea
 	ta := textarea.New()
 	ta.Placeholder = "Enter your prompt here..."
@@ -41,7 +41,7 @@ func NewEditorModel(promptName string, logger *zap.Logger) *EditorModel {
 	// TODO: Load from file system
 	ta.SetValue(fmt.Sprintf("# %s Prompt\n\nYou are an AI assistant that helps with...\n\nPlease {{task}} the following {{input}}:\n\n{{content}}", promptName))
 	
-	return &EditorModel{
+	return &editorModel{
 		promptName: promptName,
 		logger:     logger,
 		textarea:   ta,
@@ -50,12 +50,12 @@ func NewEditorModel(promptName string, logger *zap.Logger) *EditorModel {
 }
 
 // Init initializes the editor model
-func (m *EditorModel) Init() tea.Cmd {
+func (m *editorModel) Init() tea.Cmd {
 	return textarea.Blink
 }
 
 // Update handles messages for the editor
-func (m *EditorModel) Update(msg tea.Msg) (*EditorModel, tea.Cmd) {
+func (m *editorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	
 	switch msg := msg.(type) {
@@ -76,7 +76,7 @@ func (m *EditorModel) Update(msg tea.Msg) (*EditorModel, tea.Cmd) {
 }
 
 // View renders the editor
-func (m *EditorModel) View() string {
+func (m *editorModel) View() string {
 	// Create the editor section
 	editorStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
@@ -114,7 +114,7 @@ func (m *EditorModel) View() string {
 }
 
 // renderInfo renders the prompt information panel
-func (m *EditorModel) renderInfo() string {
+func (m *editorModel) renderInfo() string {
 	content := m.textarea.Value()
 	
 	// Count variables (simple {{variable}} detection)
@@ -126,7 +126,7 @@ func (m *EditorModel) renderInfo() string {
 		Padding(1).
 		Margin(0, 0, 1, 0)
 	
-	info := fmt.Sprintf("📊 Prompt Info\n\n"+
+	info := fmt.Sprintf("[*] Prompt Info\n\n"+
 		"Name: %s\n"+
 		"Length: %d chars\n"+
 		"Lines: %d\n"+
@@ -143,7 +143,7 @@ func (m *EditorModel) renderInfo() string {
 }
 
 // renderPreview renders the prompt preview panel
-func (m *EditorModel) renderPreview() string {
+func (m *editorModel) renderPreview() string {
 	previewStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("205")).
@@ -153,13 +153,13 @@ func (m *EditorModel) renderPreview() string {
 	content := m.textarea.Value()
 	preview := m.generatePreview(content)
 	
-	previewContent := fmt.Sprintf("🔍 Live Preview\n\n%s", preview)
+	previewContent := fmt.Sprintf("[>] Live Preview\n\n%s", preview)
 	
 	return previewStyle.Render(previewContent)
 }
 
 // extractVariables extracts variable names from the prompt content
-func (m *EditorModel) extractVariables(content string) []string {
+func (m *editorModel) extractVariables(content string) []string {
 	var variables []string
 	
 	// Simple regex-like extraction for {{variable}} patterns
@@ -187,7 +187,7 @@ func (m *EditorModel) extractVariables(content string) []string {
 }
 
 // generatePreview generates a preview with sample variable values
-func (m *EditorModel) generatePreview(content string) string {
+func (m *editorModel) generatePreview(content string) string {
 	// Sample variable substitutions
 	sampleVars := map[string]string{
 		"task":    "analyze",
@@ -212,7 +212,7 @@ func (m *EditorModel) generatePreview(content string) string {
 }
 
 // SetSize updates the editor dimensions
-func (m *EditorModel) SetSize(width, height int) {
+func (m *editorModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
 	
@@ -222,11 +222,11 @@ func (m *EditorModel) SetSize(width, height int) {
 }
 
 // GetContent returns the current prompt content
-func (m *EditorModel) GetContent() string {
+func (m *editorModel) GetContent() string {
 	return m.textarea.Value()
 }
 
 // SetContent sets the prompt content
-func (m *EditorModel) SetContent(content string) {
+func (m *editorModel) SetContent(content string) {
 	m.textarea.SetValue(content)
 }

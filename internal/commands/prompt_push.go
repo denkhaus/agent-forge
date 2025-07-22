@@ -70,7 +70,11 @@ func HandlePromptPush() cli.ActionFunc {
 			zap.String("message", message),
 			zap.String("tag", tag))
 
-		promptService := getPromptService()
+		promptService, err := getPromptServiceFromDI(ctx.DIContainer)
+		if err != nil {
+			log.Warn("Failed to get prompt service from DI, using direct instantiation", zap.Error(err))
+			promptService = getPromptService()
+		}
 		
 		// Push the prompt using the prompt service
 		fmt.Printf("Pushing prompt '%s' to %s", name, repo)
@@ -79,7 +83,7 @@ func HandlePromptPush() cli.ActionFunc {
 		}
 		fmt.Println("...")
 
-		err := promptService.PushPrompt(name, repo, message, tag)
+		err = promptService.PushPrompt(name, repo, message, tag)
 		if err != nil {
 			return fmt.Errorf("failed to push prompt: %w", err)
 		}
