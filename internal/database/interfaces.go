@@ -13,6 +13,7 @@ type DatabaseManager interface {
 	Initialize(ctx context.Context) error
 	Shutdown() error
 	GetRepositoryService() RepositoryService
+	GetConfigService() ConfigService
 	GetDatabasePath() string
 	GetClient() DatabaseClient
 }
