@@ -32,7 +32,7 @@ all: clean lint test build
 build:
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p bin
-	$(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -o $(BINARY_PATH) .
+	$(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -o $(BINARY_PATH) ./cmd
 	@echo "Build complete: $(BINARY_PATH)"
 
 # Clean build artifacts
@@ -153,9 +153,9 @@ ci: deps lint vet check-file-length test security build
 release:
 	@echo "Building release version..."
 	@mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -a -installsuffix cgo -o bin/$(BINARY_NAME)-linux-amd64 .
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -a -installsuffix cgo -o bin/$(BINARY_NAME)-darwin-amd64 .
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -a -installsuffix cgo -o bin/$(BINARY_NAME)-windows-amd64.exe .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -a -installsuffix cgo -o bin/$(BINARY_NAME)-linux-amd64 ./cmd
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -a -installsuffix cgo -o bin/$(BINARY_NAME)-darwin-amd64 ./cmd
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -a -installsuffix cgo -o bin/$(BINARY_NAME)-windows-amd64.exe ./cmd
 	@echo "Release builds complete"
 
 # Help
