@@ -88,3 +88,8 @@ func (m *manager) GetRepositoryService() RepositoryService {
 func (m *manager) GetDatabasePath() string {
 	return "agentforge.db"
 }
+
+// GetClient returns the database client (for DI support)
+func (m *manager) GetClient() DatabaseClient {
+	return m.client
+}

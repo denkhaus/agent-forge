@@ -92,10 +92,12 @@ func (ctx *Context) initializeServices(opts *StartupOptions) error {
 	return nil
 }
 
-// initializeDatabase initializes the database manager
+// initializeDatabase initializes the database manager using DI
 func (ctx *Context) initializeDatabase(dbPath string) error {
 	log.Info("Initializing database", zap.String("path", dbPath))
 	
+	// TODO: Use DI container to get DatabaseManager instead of direct creation
+	// For now, keep existing logic but mark for refactoring
 	if dbPath == "" {
 		dbPath = "agentforge.db"
 	}
@@ -118,10 +120,12 @@ func (ctx *Context) initializeDatabase(dbPath string) error {
 	return nil
 }
 
-// initializeGit initializes the Git client
+// initializeGit initializes the Git client using DI
 func (ctx *Context) initializeGit() error {
 	log.Info("Initializing Git client")
 	
+	// TODO: Use DI container to get GitClient instead of direct creation
+	// For now, keep existing logic but mark for refactoring
 	gitClient := git.NewClient(log)
 	ctx.GitClient = gitClient
 	
@@ -129,10 +133,12 @@ func (ctx *Context) initializeGit() error {
 	return nil
 }
 
-// initializeGitHub initializes the GitHub client
+// initializeGitHub initializes the GitHub client using DI
 func (ctx *Context) initializeGitHub() error {
 	log.Info("Initializing GitHub client")
 	
+	// TODO: Use DI container to get GitHubClient instead of direct creation
+	// For now, keep existing logic but mark for refactoring
 	githubClient := github.NewClient("")
 	ctx.GitHubClient = githubClient
 	

@@ -14,6 +14,7 @@ type DatabaseManager interface {
 	Shutdown() error
 	GetRepositoryService() RepositoryService
 	GetDatabasePath() string
+	GetClient() DatabaseClient
 }
 
 // RepositoryService defines the interface for repository management operations.
