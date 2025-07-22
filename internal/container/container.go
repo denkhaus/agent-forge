@@ -6,6 +6,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/denkhaus/agentforge/internal/config"
+	"github.com/denkhaus/agentforge/internal/database"
+	"github.com/denkhaus/agentforge/internal/git"
+	"github.com/denkhaus/agentforge/internal/github"
 	"github.com/denkhaus/agentforge/internal/logger"
 	"github.com/denkhaus/agentforge/internal/providers"
 	"github.com/denkhaus/agentforge/internal/session"
@@ -67,6 +70,30 @@ func Setup(cfg *config.Config) *do.Injector {
 
 	do.Provide(newInjector, func(i *do.Injector) (types.PromptProvider, error) {
 		return providers.NewPromptProvider(i)
+	})
+
+	// Register database services
+	do.Provide(newInjector, func(i *do.Injector) (database.DatabaseManager, error) {
+		cfg := do.MustInvoke[*config.Config](i)
+		return database.NewManager(cfg)
+	})
+
+	// Register DatabaseClient through DatabaseManager
+	do.Provide(newInjector, func(i *do.Injector) (database.DatabaseClient, error) {
+		manager := do.MustInvoke[database.DatabaseManager](i)
+		return manager.GetClient(), nil
+	})
+
+	// Register Git services
+	do.Provide(newInjector, func(i *do.Injector) (*git.Client, error) {
+		log := do.MustInvoke[*zap.Logger](i)
+		return git.NewClient(log), nil
+	})
+
+	// Register GitHub services  
+	do.Provide(newInjector, func(i *do.Injector) (types.GitHubClient, error) {
+		cfg := do.MustInvoke[*config.Config](i)
+		return github.NewClient(cfg.GitHubToken), nil
 	})
 
 	return newInjector
