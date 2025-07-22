@@ -1,0 +1,16 @@
+{
+  "variables": {
+{{range $i, $v := .Variables}}{{if $i}},{{end}}
+    "{{$v.Name}}": {
+      "type": "{{$v.Type}}",
+      "description": "{{$v.Description}}",
+      "required": {{$v.Required}}{{if $v.Default}},
+      "default": "{{$v.Default}}"{{end}}
+    }{{end}}
+  },
+  "schema_version": "{{.SchemaVersion}}",
+  "metadata": {
+    "generated_at": "{{.GeneratedAt}}",
+    "generator": "{{.Generator}}"
+  }
+}

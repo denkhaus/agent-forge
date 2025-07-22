@@ -1,0 +1,14 @@
+# {{.Name}}
+
+{{.Description}}
+
+## Instructions:
+{{.Instructions}}
+
+{{range .Variables}}## {{.Name}}:
+{{printf "{{%s}}" .Name}}
+
+{{end}}## Output Format:
+{{.OutputFormat}}
+
+Please provide a thorough and helpful response.

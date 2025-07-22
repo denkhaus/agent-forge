@@ -1,0 +1,9 @@
+{
+  "variables": {
+    "task": {
+      "type": "string",
+      "description": "The task to help with",
+      "required": true
+    }
+  }
+}

@@ -1,0 +1,118 @@
+apiVersion: forge.dev/v1
+kind: Tool
+metadata:
+  name: weather-lookup
+  version: "1.2.0"
+  description: "Get current weather information for any location worldwide"
+  author: "AgentForge Community"
+  license: "MIT"
+  homepage: "https://github.com/agentforge/weather-tool"
+  documentation: "https://docs.agentforge.dev/tools/weather-lookup"
+  repository: "https://github.com/agentforge/weather-tool"
+  
+  labels:
+    category: "data-retrieval"
+    provider: "openweather"
+    tier: "community"
+  
+  annotations:
+    forge.dev/icon: "🌤️"
+    forge.dev/color: "#4A90E2"
+  
+  tags: ["weather", "api", "location", "forecast"]
+  categories: ["data", "external-api"]
+  keywords: ["weather", "temperature", "forecast", "location", "climate"]
+  
+  stability: stable
+  maturity: mature
+  forgeVersion: ">=0.1.0"
+  platforms: ["linux/amd64", "linux/arm64", "darwin/amd64", "darwin/arm64"]
+
+spec:
+  type: mcp-server
+  runtime: go
+  entryPoint: "./weather-server"
+  args: ["--port", "8080"]
+  workingDir: "/app"
+  
+  functions:
+    - name: get_current_weather
+      description: "Get the current weather for a specific location"
+      parameters:
+        - name: location
+          type: string
+          description: "The city and state/country (e.g., 'San Francisco, CA')"
+          required: true
+        - name: units
+          type: string
+          description: "Temperature units (metric, imperial, kelvin)"
+          required: false
+          default: "metric"
+          enum: ["metric", "imperial", "kelvin"]
+      returns:
+        name: weather_data
+        type: object
+        description: "Current weather information"
+      examples:
+        - name: basic_weather
+          description: "Get weather for San Francisco"
+          input:
+            location: "San Francisco, CA"
+            units: "metric"
+          output:
+            temperature: 18.5
+            humidity: 65
+            description: "Partly cloudy"
+            wind_speed: 12.3
+    
+    - name: get_forecast
+      description: "Get weather forecast for the next 5 days"
+      parameters:
+        - name: location
+          type: string
+          description: "The city and state/country"
+          required: true
+        - name: days
+          type: number
+          description: "Number of days to forecast (1-5)"
+          required: false
+          default: 3
+          minimum: 1
+          maximum: 5
+  
+  dependencies:
+    - name: openweather-api
+      version: ">=2.5.0"
+      type: service
+      source: "https://openweathermap.org/api"
+    - name: go
+      version: ">=1.21"
+      type: system
+  
+  configuration:
+    environment:
+      OPENWEATHER_API_KEY: "required"
+      PORT: "8080"
+    secrets:
+      - "OPENWEATHER_API_KEY"
+  
+  healthCheck:
+    enabled: true
+    path: "/health"
+    intervalSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  
+  security:
+    readOnlyRootFS: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    droppedCapabilities: ["ALL"]

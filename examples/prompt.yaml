@@ -1,0 +1,154 @@
+apiVersion: forge.dev/v1
+kind: Prompt
+metadata:
+  name: code-reviewer
+  version: "2.0.1"
+  description: "AI prompt for comprehensive code review with security and performance analysis"
+  author: "DevTools Team"
+  license: "Apache-2.0"
+  homepage: "https://github.com/agentforge/code-reviewer-prompt"
+  documentation: "https://docs.agentforge.dev/prompts/code-reviewer"
+  
+  labels:
+    category: "development"
+    language: "multi"
+    complexity: "advanced"
+  
+  annotations:
+    forge.dev/icon: "🔍"
+    forge.dev/difficulty: "intermediate"
+  
+  tags: ["code-review", "security", "performance", "best-practices"]
+  categories: ["development", "quality-assurance"]
+  keywords: ["code", "review", "security", "performance", "bugs", "optimization"]
+  
+  stability: stable
+  maturity: stable
+  forgeVersion: ">=0.1.0"
+
+spec:
+  type: template
+  format: markdown
+  
+  template: |
+    # Code Review Assistant
+    
+    You are an expert code reviewer with deep knowledge of software engineering best practices, security vulnerabilities, and performance optimization.
+    
+    ## Your Task
+    Review the following {{language}} code and provide comprehensive feedback:
+    
+    ```{{language}}
+    {{code}}
+    ```
+    
+    ## Review Criteria
+    
+    ### 1. Code Quality
+    - **Readability**: Is the code clear and well-documented?
+    - **Maintainability**: Is it easy to modify and extend?
+    - **Best Practices**: Does it follow {{language}} conventions?
+    
+    ### 2. Security Analysis
+    - **Vulnerabilities**: Check for common security issues
+    - **Input Validation**: Verify proper sanitization
+    - **Authentication/Authorization**: Review access controls
+    
+    ### 3. Performance
+    - **Efficiency**: Identify potential bottlenecks
+    - **Resource Usage**: Check memory and CPU optimization
+    - **Scalability**: Assess performance under load
+    
+    ### 4. Testing
+    - **Test Coverage**: Evaluate testing strategy
+    - **Edge Cases**: Identify missing test scenarios
+    
+    ## Output Format
+    
+    Provide your review in the following structure:
+    
+    ### ✅ Strengths
+    - List positive aspects of the code
+    
+    ### ⚠️ Issues Found
+    - **High Priority**: Critical issues requiring immediate attention
+    - **Medium Priority**: Important improvements
+    - **Low Priority**: Nice-to-have enhancements
+    
+    ### 🔧 Specific Recommendations
+    - Provide concrete suggestions with code examples where applicable
+    
+    ### 📊 Overall Score
+    Rate the code quality from 1-10 with justification.
+    
+    {{#if include_examples}}
+    ### 💡 Example Improvements
+    Show before/after code snippets for key recommendations.
+    {{/if}}
+  
+  variables:
+    - name: language
+      type: string
+      description: "Programming language of the code being reviewed"
+      required: true
+      enum: ["javascript", "typescript", "python", "go", "java", "rust", "cpp", "csharp"]
+    
+    - name: code
+      type: string
+      description: "The code to be reviewed"
+      required: true
+      minLength: 10
+      maxLength: 10000
+    
+    - name: include_examples
+      type: boolean
+      description: "Whether to include before/after code examples"
+      required: false
+      default: true
+  
+  examples:
+    - name: javascript_function
+      description: "Review a JavaScript function"
+      variables:
+        language: "javascript"
+        code: |
+          function calculateTotal(items) {
+            let total = 0;
+            for (let i = 0; i < items.length; i++) {
+              total += items[i].price * items[i].quantity;
+            }
+            return total;
+          }
+        include_examples: true
+      expected: "Comprehensive review covering code quality, potential improvements, and best practices"
+    
+    - name: python_class
+      description: "Review a Python class"
+      variables:
+        language: "python"
+        code: |
+          class UserManager:
+              def __init__(self):
+                  self.users = []
+              
+              def add_user(self, name, email):
+                  user = {"name": name, "email": email}
+                  self.users.append(user)
+                  return user
+        include_examples: false
+  
+  validation:
+    maxTokens: 4000
+    minTokens: 500
+    requiredVars: ["language", "code"]
+  
+  metrics:
+    averageTokens: 2500
+    successRate: 0.95
+    averageLatency: "3.2s"
+    recommendedModel: ["gpt-4", "claude-3-sonnet", "gemini-pro"]
+  
+  models: ["gpt-4", "gpt-4-turbo", "claude-3-sonnet", "claude-3-opus", "gemini-pro"]
+  temperature: 0.3
+  maxTokens: 4000
+  stopSequences: ["### END REVIEW"]
