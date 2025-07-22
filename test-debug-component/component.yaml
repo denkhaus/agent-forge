@@ -1,0 +1,4 @@
+apiVersion: forge.dev/v1
+kind: Tool
+metadata:
+  name: test-debug-component

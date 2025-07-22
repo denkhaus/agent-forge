@@ -1,0 +1,189 @@
+apiVersion: forge.dev/v1
+kind: Agent
+metadata:
+  name: customer-support-agent
+  version: "1.5.0"
+  description: "Intelligent customer support agent with multi-channel capabilities and knowledge base integration"
+  author: "Enterprise Solutions Team"
+  license: "Commercial"
+  homepage: "https://enterprise.agentforge.dev/agents/customer-support"
+  documentation: "https://docs.enterprise.agentforge.dev/agents/customer-support"
+  
+  labels:
+    tier: "enterprise"
+    department: "customer-success"
+    integration: "zendesk"
+  
+  annotations:
+    forge.dev/icon: "🎧"
+    forge.dev/cost-tier: "premium"
+    enterprise.forge.dev/sla: "99.9%"
+  
+  tags: ["customer-support", "conversational", "multi-channel", "enterprise"]
+  categories: ["customer-service", "automation"]
+  keywords: ["support", "helpdesk", "tickets", "chat", "email", "knowledge-base"]
+  
+  stability: stable
+  maturity: mature
+  forgeVersion: ">=0.2.0"
+  platforms: ["linux/amd64", "darwin/amd64"]
+
+spec:
+  type: conversational
+  
+  capabilities:
+    - name: natural_conversation
+      description: "Engage in natural, context-aware conversations"
+      type: reasoning
+    - name: knowledge_retrieval
+      description: "Search and retrieve information from knowledge base"
+      type: tool
+    - name: ticket_management
+      description: "Create, update, and manage support tickets"
+      type: tool
+    - name: sentiment_analysis
+      description: "Analyze customer sentiment and escalate when needed"
+      type: reasoning
+    - name: conversation_memory
+      description: "Remember conversation context and customer history"
+      type: memory
+  
+  tools:
+    - name: knowledge-search
+      type: tool
+      source: "forge://enterprise/knowledge-search:v2.1.0"
+      required: true
+      config:
+        index: "customer-support-kb"
+        max_results: "5"
+    
+    - name: ticket-manager
+      type: tool
+      source: "forge://enterprise/zendesk-integration:v1.8.0"
+      required: true
+      config:
+        api_endpoint: "${ZENDESK_API_URL}"
+        default_priority: "normal"
+    
+    - name: customer-lookup
+      type: tool
+      source: "forge://enterprise/crm-lookup:v3.2.0"
+      required: false
+      condition: "customer_id != null"
+      config:
+        crm_system: "salesforce"
+    
+    - name: escalation-manager
+      type: tool
+      source: "forge://enterprise/escalation:v1.0.0"
+      required: true
+      config:
+        escalation_threshold: "high_priority"
+        notify_channels: "slack,email"
+  
+  prompts:
+    - name: system-instructions
+      type: system
+      source: "forge://enterprise/support-system-prompt:v2.0.0"
+      priority: 1
+    
+    - name: greeting-template
+      type: template
+      source: "forge://enterprise/support-greeting:v1.5.0"
+      priority: 2
+      config:
+        personalization: "enabled"
+    
+    - name: escalation-template
+      type: template
+      source: "forge://enterprise/escalation-prompt:v1.2.0"
+      priority: 3
+  
+  memory:
+    - type: short-term
+      provider: "redis"
+      capacity: 1000
+      persistence: false
+      ttl: "1h"
+    
+    - type: long-term
+      provider: "postgresql"
+      persistence: true
+      capacity: 10000
+    
+    - type: episodic
+      provider: "vector-db"
+      persistence: true
+      capacity: 5000
+      ttl: "30d"
+  
+  model:
+    provider: "openai"
+    model: "gpt-4-turbo"
+    temperature: 0.7
+    maxTokens: 2000
+    topP: 0.9
+    fallback:
+      - provider: "anthropic"
+        model: "claude-3-sonnet"
+        condition: "rate_limit_exceeded"
+      - provider: "openai"
+        model: "gpt-3.5-turbo"
+        condition: "cost_optimization"
+  
+  behavior:
+    personality: "Professional, empathetic, and solution-oriented customer service representative"
+    goals:
+      - "Resolve customer issues efficiently and accurately"
+      - "Maintain high customer satisfaction scores"
+      - "Escalate complex issues to human agents when appropriate"
+      - "Learn from interactions to improve future responses"
+    constraints:
+      - "Never share confidential customer information"
+      - "Always verify customer identity before accessing account details"
+      - "Escalate to human agent if customer explicitly requests it"
+      - "Do not make promises about refunds or policy changes without authorization"
+    ethics:
+      - "Treat all customers with respect and dignity"
+      - "Provide accurate information and admit when uncertain"
+      - "Protect customer privacy and data security"
+      - "Be transparent about being an AI assistant"
+    communication:
+      tone: "professional-friendly"
+      style: "concise-helpful"
+      language_detection: "auto"
+      multilingual: "enabled"
+  
+  interface:
+    type: api
+    protocol: "http"
+    port: 8080
+    path: "/chat"
+    config:
+      cors_enabled: "true"
+      rate_limiting: "100/minute"
+      authentication: "bearer_token"
+  
+  security:
+    sandbox: true
+    allowedDomains:
+      - "api.zendesk.com"
+      - "salesforce.com"
+      - "knowledge-base.company.com"
+    maxExecutionTime: "30s"
+    resourceLimits:
+      cpu: "2000m"
+      memory: "4Gi"
+      network: "100Mbps"
+      processes: 10
+  
+  environment:
+    LOG_LEVEL: "info"
+    ZENDESK_API_URL: "${ZENDESK_API_URL}"
+    SALESFORCE_API_URL: "${SALESFORCE_API_URL}"
+    KNOWLEDGE_BASE_URL: "${KNOWLEDGE_BASE_URL}"
+    ESCALATION_WEBHOOK: "${ESCALATION_WEBHOOK_URL}"
+  
+  configFiles:
+    - "/config/knowledge-base-config.yaml"
+    - "/config/escalation-rules.yaml"

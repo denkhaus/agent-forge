@@ -1,0 +1,48 @@
+apiVersion: agentforge.dev/v1
+kind: Prompt
+metadata:
+  name: {{.Name}}
+  namespace: {{.Namespace}}
+  version: {{.Version}}
+  description: {{.Description}}
+  author: {{.Author}}
+  license: {{.License}}
+  homepage: {{.Homepage}}
+  documentation: {{.Documentation}}
+  tags: {{.Tags}}
+  categories: {{.Categories}}
+  keywords: {{.Keywords}}
+  created: {{.Created}}
+
+spec:
+  prompt:
+    type: {{.PromptType}}
+    language: {{.Language}}
+    template_file: template.txt
+    variables_file: variables.json
+    context_window: {{.ContextWindow}}
+    supports_streaming: {{.SupportsStreaming}}
+    
+  variables:
+{{range .Variables}}    - name: {{.Name}}
+      type: {{.Type}}
+      description: {{.Description}}
+      required: {{.Required}}{{if .Default}}
+      default: {{.Default}}{{end}}
+{{end}}
+    
+  model_preferences:
+{{range .ModelPreferences}}    - {{.}}
+{{end}}
+    
+  configuration:
+    temperature: {{.Temperature}}
+    max_tokens: {{.MaxTokens}}
+    stop_sequences: {{.StopSequences}}
+
+stability: {{.Stability}}
+maturity: {{.Maturity}}
+forge_version: {{.ForgeVersion}}
+platforms:
+{{range .Platforms}}  - {{.}}
+{{end}}

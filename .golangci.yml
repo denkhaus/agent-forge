@@ -1,0 +1,413 @@
+#.golangci.yml
+# golangci-lint configuration file for v2.2.2, covering modern software development and best practices.
+# This configuration aims for a strict but pragmatic approach, enabling a wide range of linters
+# and providing specific settings to reduce noise while enforcing high quality.
+
+version: "2"
+
+# Global run options for golangci-lint.
+run:
+  # The maximum duration for the whole linting process.
+  # Adjust based on project size and CI/CD pipeline timeouts.
+  timeout: 5m
+  # Number of concurrent linting processes. Adjust based on available CPU cores.
+  concurrency: 4
+  # Enable linting of Go test files. Crucial for maintaining quality across the entire codebase.
+  tests: true
+  # All file paths are now relative to the configuration file by default.
+  # This ensures consistent behavior across different environments (local, CI/CD).
+  relative-path-mode: cfg
+  # Configures Go module downloads to be read-only, preventing modifications to the module cache.
+  modules-download-mode: readonly
+  # Fail if any issues are found.
+  issues-exit-code: 1
+  # Skip default directories like 'vendor', 'testdata', 'examples', 'Godeps', 'builtin'.
+  # Setting to false allows explicit control; we'll re-add specific skips if needed.
+  skip-dirs-use-default: false
+  # Keep this empty to use the Go version from the go.mod file, ensuring compatibility.
+  go: ""
+
+# Output configuration options.
+output:
+  # Preferred format for displaying issues. 'colored-line-number' is good for local development.
+  # For CI/CD, 'github-actions' or 'json' might be preferred.
+  format: colored-line-number
+  # Print the name of the linter that reported the issue. Improves clarity.
+  print-linter-name: true
+  # Print the line of code where the issue was found. Provides immediate context.
+  print-issued-lines: true
+  # Sort results for deterministic output, useful for CI/CD and consistent reporting.
+  sort-results: true
+
+# Issues configuration.
+issues:
+  # No limit on the number of issues reported per linter.
+  max-issues-per-linter: 0
+  # No limit on the number of identical issues reported.
+  max-same-issues: 0
+  # Report all issues, not just new ones. For CI/CD, 'true' can be used to only report new issues on PRs.
+  new: false
+  # Do not automatically fix issues. This should be a manual step or a separate formatting/fix command.
+  fix: false
+  # Do not use default exclusions. This aligns with v2's philosophy of explicit control.
+  # Any desired exclusions must be explicitly defined below.
+  exclude-use-default: false
+  # Define specific exclusion rules to manage noise and project-specific deviations.
+  exclude-rules:
+    # Exclude specific revive warnings that might be too opinionated or common false positives.
+    - linters:
+        - revive
+      text: "comment on exported (var|const|type|func) (.+) should be of the form" # Avoid requiring comments on ALL exported items, focus on important ones.
+    - linters:
+        - revive
+      text: "package comment should be of the form" # Relax package comment requirements for smaller internal packages.
+    - linters:
+        - revive
+      text: "don't use `else` with `if` that ends with a `return` statement" # Sometimes `else` improves readability, allow flexibility.
+    # Exclude generated files from certain checks.
+    - path: "zz_generated.*" # Common pattern for generated files.
+      linters:
+        - errcheck
+        - staticcheck
+        - gosec
+        - lll
+        - funlen
+        - gocyclo
+        - godox
+    # Exclude specific linter issues in test files where they might be less critical or intentional.
+    - path: "_test\\.go$"
+      linters:
+        - dupl # Duplication in tests can be acceptable for clarity.
+        - gosec # Test files might contain non-production security patterns.
+        - noctx # Context not always strictly required in simple tests.
+        - exhaustruct # Test structs might not need all fields initialized.
+        - lll # Long lines in test data/assertions.
+    # Exclude specific `lll` issues for `go:generate` directives.
+    - source: "^//go:generate "
+      linters:
+        - lll
+    # Exclude specific `testifylint` issues if they conflict with team style.
+    - linters:
+        - testifylint
+      text: "equal-values" # Allow `EqualValues` if deemed acceptable for certain comparisons.
+    - linters:
+        - testifylint
+      text: "suite-method-signature" # Allow flexibility in test suite method signatures.
+
+  # Define severity levels for different linters or rules.
+  severity:
+    default: error # All issues are treated as errors by default, failing the build.
+    rules:
+      - linters:
+          - godox # Treat TODO/FIXME comments as info, not errors.
+        severity: info
+      - linters:
+          - lll # Treat long lines as warnings, not errors, to allow for exceptions.
+        severity: warn
+      - linters:
+          - funlen # Treat long functions as warnings.
+        severity: warn
+      - linters:
+          - gocyclo # Treat high cyclomatic complexity as warnings.
+        severity: warn
+      - linters:
+          - nestif # Treat deeply nested ifs as warnings.
+        severity: warn
+      - linters:
+          - dupl # Treat code duplication as warnings.
+        severity: warn
+
+# Linters configuration.
+linters:
+  # Enable all available linters by default. This provides maximum coverage.
+  # Specific linters can then be disabled or configured below to manage noise.
+  default: all
+  # Explicitly disable linters that are known to be problematic, overly opinionated,
+  # or not relevant for the project's specific context.
+  disable:
+    - asciicheck # Can be noisy with non-ASCII characters in comments/strings.
+    - bidichk # Less common for typical Go projects unless dealing with mixed-direction text.
+    - dogsled # Can be overly strict about blank identifiers, sometimes they are idiomatic.
+    - dupword # Can be noisy with common words.
+    - embeddedstructfieldcheck # Opinionated style, can conflict with other formatting.
+    - err113 # Can be noisy, `errorlint` covers similar ground for wrapping.
+    - forbidigo # Only enable if specific identifiers need to be forbidden.
+    - forcetypeassert # Can be overly strict, sometimes type assertions are necessary.
+    - funcorder # Opinionated about function order, can conflict with logical grouping.
+    - gocheckcompilerdirectives # Less common to enforce.
+    - gochecksumtype # Niche for sum types, not universally applicable.
+    - goheader # Requires specific header patterns, which might not be universal.
+    - goprintffuncname # Opinionated naming, covered by `revive` or `staticcheck` usually.
+    - gosmopolitan # Niche for i18n/l10n anti-patterns.
+    - grouper # Experimental, potentially unstable.
+    - inamedparam # Opinionated about named parameters in interfaces.
+    - interfacebloat # Can be overly strict about interface size, context matters.
+    - intrange # Niche optimization.
+    - mirror # Niche for bytes/strings mirror patterns.
+    - musttag # Can be overly strict, sometimes tags are not needed for all structs.
+    - nonamedreturns # Opinionated, named returns can improve clarity in some cases.
+    - predeclared # Can be overly strict about shadowing built-in names.
+    - promlinter # Only if Prometheus metrics are strictly used and need specific linting.
+    - reassign # Can be overly strict about package variable reassignment.
+    - recvcheck # Opinionated about receiver consistency, can be noisy.
+    - testableexamples # Niche for Go example tests.
+    - unconvert # Can be noisy for explicit conversions.
+    - wastedassign # Can be noisy for intentional wasted assignments.
+    - whitespace # Can be overly strict about whitespace, often covered by formatters.
+    - wsl # Replaced by `wsl_v5` and generally opinionated.
+    - wsl_v5 # Highly opinionated whitespace linter, often conflicts with formatters.
+
+  # Linter-specific settings.
+  settings:
+    copyloopvar:
+      check-alias: true # Check for aliased loop variables, preventing common bugs.
+    cyclop:
+      max-complexity: 10 # Maximum allowed cyclomatic complexity. Lower for simpler functions.
+      package-average: 0 # Disable checking for average package complexity.
+    depguard:
+      rules:
+        main:
+          list-mode: strict # Strict mode for banned packages.
+          deny:
+            - pkg: github.com/sirupsen/logrus # Prefer structured logging with `slog` or `zap`.
+              desc: "use log/slog or zap"
+            - pkg: github.com/pkg/errors # Prefer standard library error wrapping (`fmt.Errorf("%w", err)`).
+              desc: 'use standard library error wrapping (fmt.Errorf("%w", err))'
+            - pkg: github.com/davecgh/go-spew/spew # Debugging tool, should not be in production code.
+              desc: "debugging tool, remove before production"
+            - pkg: gopkg.in/yaml.v2 # Prefer `gopkg.in/yaml.v3` or `gopkg.in/yaml.v3` for better features/security.
+              desc: "prefer gopkg.in/yaml.v3"
+    errcheck:
+      check-type-assertions: false # Type assertions are often intentional, avoid noise.
+      check-blank: false # Blank identifier for errors is often idiomatic.
+    errorlint:
+      errorf: true # Check `fmt.Errorf` usage.
+      asserts: true # Check type assertions on errors.
+      comparison: true # Check error comparisons.
+    exhaustive:
+      default-signifies-exhaustive: false # `default` case does not signify exhaustiveness for enums.
+    funlen:
+      lines: 60 # Maximum allowed function length in lines.
+      statements: 40 # Maximum allowed function length in statements.
+    gocognit:
+      min-complexity: 10 # Minimum cognitive complexity to report.
+    goconst:
+      min-len: 3 # Minimum length of a constant to report.
+      min-occurrences: 3 # Minimum number of occurrences for a constant to be reported.
+    gocritic:
+      disabled-checks:
+        - regexpMust # `regexp.MustCompile` is often fine for known good regex.
+      enabled-tags:
+        - performance
+        - diagnostic
+        - style
+      disabled-tags:
+        - experimental # Avoid experimental checks for stability.
+      settings:
+        captLocal:
+          paramsOnly: true
+        elseif:
+          skipBalanced: true # Skip balanced `if-else if` chains.
+        hugeParam:
+          sizeThreshold: 80 # Report huge parameters.
+        rangeExprCopy:
+          sizeThreshold: 512
+          skipTestFuncs: true
+        rangeValCopy:
+          sizeThreshold: 32
+          skipTestFuncs: true
+        underef:
+          skipRecvDeref: true
+    gocyclo:
+      min-complexity: 10 # Minimum cyclomatic complexity to report.
+    godot:
+      scope: declarations # Check comments on declarations.
+      capital: false # Do not require capitalization for comments.
+    godox:
+      keywords: # Define keywords for TODO/FIXME comments.
+        - NOTE
+        - OPTIMIZE
+        - HACK
+        - BUG
+        - XXX
+    gomoddirectives:
+      replace-local: false # Do not allow local `replace` directives in go.mod.
+      exclude-forbidden: false
+      retract-allow-no-explanation: false
+    gomodguard:
+      blocked:
+        local-replace-directives: false # Do not allow local `replace` directives.
+        # Add specific module blocks if needed, e.g.,
+        # - module: "example.com/old/module"
+        #   recommendations:
+        #     - "example.com/new/module"
+        #   reason: "deprecated"
+    govet:
+      enable:
+        - atomicalign # Check for atomicalign issues.
+        - shadow # Check for variable shadowing.
+      enable-all: false # Do not enable all govet checks, be selective.
+      disable-all: false # Do not disable all govet checks.
+    importas:
+      no-unaliased: true # Requires all imports to be aliased.
+    lll:
+      line-length: 120 # Maximum allowed line length.
+      tab-width: 1 # Tab width for calculation.
+    nakedret:
+      max-func-lines: 30 # Maximum function lines for naked returns.
+    nestif:
+      min-complexity: 4 # Minimum complexity for nested `if` statements to report.
+    nolintlint:
+      require-explanation: true # Require an explanation for `nolint` directives.
+      require-specific: true # Require specific linters to be mentioned in `nolint` directives.
+      allow-unused: false # Do not allow unused `nolint` directives.
+    prealloc:
+      simple: true # Enable simple preallocation checks.
+      range-loops: true # Enable preallocation checks for range loops.
+      for-loops: false # Disable preallocation checks for `for` loops.
+    staticcheck:
+      checks:
+        - all # Enable all staticcheck rules.
+        # Example of disabling a specific staticcheck rule if it's too noisy:
+        # - "-ST1003" # Don't check initialisms (e.g., HTTP instead of Http).
+      initialisms: # Common initialisms that should be treated as single words.
+        - ACL
+        - API
+        - ASCII
+        - CPU
+        - CSS
+        - DNS
+        - EOF
+        - GUID
+        - HTML
+        - HTTP
+        - HTTPS
+        - ID
+        - IP
+        - JSON
+        - QPS
+        - RAM
+        - RPC
+        - SLA
+        - SMTP
+        - SQL
+        - SSH
+        - TCP
+        - TLS
+        - TTL
+        - UDP
+        - UI
+        - GID
+        - UID
+        - UUID
+        - URI
+        - URL
+        - UTF8
+        - VM
+        - XML
+        - XMPP
+        - XSRF
+        - XSS
+        - RPCAPI
+        - KAS
+        - CIDR
+        - GRPC
+        - IO
+    tagalign:
+      # Align tags to the longest tag name.
+      # This can be opinionated, enable if desired.
+      align: true
+    tagliatelle:
+      case:
+        rules:
+          json: camel # Enforce camelCase for JSON tags.
+          yaml: camel # Enforce camelCase for YAML tags.
+          mapstructure: kebab # Enforce kebab-case for mapstructure tags.
+          xml: camel # Enforce camelCase for XML tags.
+        use-field-name: true # Use the field name if no tag is specified.
+    thelper:
+      test:
+        first: true # Require t.Helper() as the first statement in test helpers.
+        name: true
+        begin: true
+      benchmark:
+        first: true
+        name: true
+        begin: true
+      tb:
+        first: true
+        name: true
+        begin: true
+    unparam:
+      check-exported: false # Do not check exported functions for unused parameters, as they are part of the public API.
+    varnamelen:
+      min-name-length: 2 # Minimum length for variable names.
+      max-name-length: 50 # Maximum length for variable names.
+      check-receiver: false # Do not check receiver names.
+      check-return: false # Do not check return variable names.
+      # Exclude specific variable names from length checks if they are idiomatic.
+      ignore-names:
+        - id
+        - ok
+        - err
+        - i
+        - j
+        - k
+        - v
+        - r
+        - w
+        - t
+        - s
+        - p
+        - c
+        - x
+        - y
+        - z
+        - q
+    zerologlint:
+      # Enable if using zerolog and want to ensure correct dispatch.
+      # For example, ensure Send() or Msg() is called.
+      # For example:
+      # check-send: true
+      # check-msg: true
+
+# Formatters configuration.
+formatters:
+  # Enable popular Go formatters. These will be run automatically during `golangci-lint run`.
+  enable:
+    - gofmt
+    - goimports
+    - gofumpt
+    - gci # For grouping and ordering imports.
+    - golines # For enforcing line length.
+
+  settings:
+    gofmt:
+      simplify: true # Enable simplification rules for gofmt.
+      # rewrite-rules: # Example of custom rewrite rules
+      #   - "if x!= nil { return x } else { return y }" => "return x? x : y"
+    goimports:
+      local-prefixes:
+        - "github.com/denkhaus/mpc-planner" # Define your project's import path to group local imports.
+    gofumpt:
+      extra-rules: false # Do not enable extra rules for gofumpt unless desired.
+    gci:
+      sections:
+        - standard # Standard library imports.
+        - default # Default Go imports.
+        - prefix(github.com/your-org/your-project) # Your project's imports.
+        - blank # Blank imports.
+        - dot # Dot imports.
+      custom-order: true # Enforce the custom section order.
+    golines:
+      line-length: 120 # Enforce a maximum line length for formatting.
+      # base-formatter: gofmt # Use gofmt as the base formatter.
+
+  # Exclude specific directories from formatting.
+  exclusions:
+    generated: lax # Apply lax formatting rules to generated files.
+    paths:
+      - third_party$ # Exclude third-party code.
+      - builtin$ # Exclude builtin Go code.
+      - examples$ # Exclude examples, as they might have specific formatting needs.
+      - vendor$ # Exclude vendor directory.
