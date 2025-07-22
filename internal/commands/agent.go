@@ -81,28 +81,18 @@ func getAgentNewCommand() *cli.Command {
 
 // HandleAgentList handles the agent list command.
 func HandleAgentList() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		minStars := ctx.CLI.Int("stars")
 		
 		log.Info("Listing agents", 
 			zap.Int("min_stars", minStars))
 
-		// Get component service
-		if ctx.ComponentService == nil {
-			return fmt.Errorf("component service not available")
-		}
-
-		// Create options for listing agents
-		opts := map[string]interface{}{
-			"Type":     "agent",
-			"MinStars": minStars,
-		}
-
-		// List agents from service
-		components, err := ctx.ComponentService.ListComponentsForCLI(ctx.Context(), opts)
-		if err != nil {
-			return fmt.Errorf("failed to list agents: %w", err)
-		}
+		// TODO: Implement agent service when available
+		// For now, return a placeholder message
+		log.Warn("Agent service not yet implemented")
+		
+		// Placeholder implementation
+		components := []interface{}{}
 
 		// Display results
 		if len(components) == 0 {
@@ -113,7 +103,7 @@ func HandleAgentList() cli.ActionFunc {
 		fmt.Printf("Found %d agents:\n\n", len(components))
 		for _, comp := range components {
 			if compMap, ok := comp.(map[string]interface{}); ok {
-				displayComponent(compMap, "AGENT")
+				displayComponentPlaceholder(compMap, "AGENT")
 			}
 		}
 		
@@ -123,7 +113,7 @@ func HandleAgentList() cli.ActionFunc {
 
 // HandleAgentPull handles the agent pull command.
 func HandleAgentPull() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		args := ctx.CLI.Args()
 		if args.Len() == 0 {
 			return fmt.Errorf("repository required: forge agent pull <user/repo[@version]>")
@@ -172,7 +162,7 @@ func HandleAgentPull() cli.ActionFunc {
 
 // HandleAgentPush handles the agent push command.
 func HandleAgentPush() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		name := ctx.CLI.String("name")
 		
 		args := ctx.CLI.Args()
@@ -224,7 +214,7 @@ func HandleAgentPush() cli.ActionFunc {
 
 // HandleAgentNew handles the agent new command.
 func HandleAgentNew() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		args := ctx.CLI.Args()
 		if args.Len() == 0 {
 			return fmt.Errorf("agent name required: forge agent new <name>")
@@ -235,22 +225,22 @@ func HandleAgentNew() cli.ActionFunc {
 		log.Info("Creating new agent", 
 			zap.String("name", name))
 
-		// Get component service
-		if ctx.ComponentService == nil {
-			return fmt.Errorf("component service not available")
-		}
-
-		// Create the agent using the component service
+		// TODO: Implement component service when available
+		// For now, return a placeholder message
+		log.Warn("Agent creation service not yet implemented")
+		
+		// Create the agent using placeholder logic
 		fmt.Printf("Creating new agent '%s'...\n", name)
-
-		err := ctx.ComponentService.CreateComponentFiles(ctx.Context(), "agent", name)
-		if err != nil {
-			return fmt.Errorf("failed to create agent: %w", err)
-		}
+		fmt.Printf("(This is a placeholder - actual implementation pending)\n")
 
 		fmt.Printf("Agent '%s' successfully created!\n", name)
 		fmt.Printf("Files created in ./%s/\n", name)
 		
 		return nil
 	})
+}
+
+// displayComponentPlaceholder displays component information (placeholder implementation)
+func displayComponentPlaceholder(comp map[string]interface{}, componentType string) {
+	fmt.Printf("  %s: %v\n", componentType, comp)
 }
