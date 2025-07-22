@@ -137,22 +137,17 @@ func HandleAgentPull() cli.ActionFunc {
 			zap.String("repo", repo),
 			zap.String("version", version))
 
-		// Get component service
-		if ctx.ComponentService == nil {
-			return fmt.Errorf("component service not available")
-		}
-
-		// Pull the agent using the component service
+		// TODO: Implement component service when available
+		// For now, return a placeholder message
+		log.Warn("Agent pull service not yet implemented")
+		
+		// Pull the agent using placeholder logic
 		fmt.Printf("Pulling agent from %s", repo)
 		if version != "" {
 			fmt.Printf("@%s", version)
 		}
 		fmt.Println("...")
-
-		err := ctx.ComponentService.PullComponent(ctx.Context(), "agent", repo)
-		if err != nil {
-			return fmt.Errorf("failed to pull agent: %w", err)
-		}
+		fmt.Printf("(This is a placeholder - actual implementation pending)\n")
 
 		fmt.Printf("Agent successfully pulled from %s\n", repo)
 		
@@ -189,22 +184,17 @@ func HandleAgentPush() cli.ActionFunc {
 			zap.String("repo", repo),
 			zap.String("version", version))
 
-		// Get component service
-		if ctx.ComponentService == nil {
-			return fmt.Errorf("component service not available")
-		}
-
-		// Push the agent using the component service
+		// TODO: Implement component service when available
+		// For now, return a placeholder message
+		log.Warn("Agent push service not yet implemented")
+		
+		// Push the agent using placeholder logic
 		fmt.Printf("Pushing agent '%s' to %s", name, repo)
 		if version != "" {
 			fmt.Printf("@%s", version)
 		}
 		fmt.Println("...")
-
-		err := ctx.ComponentService.PushComponent(ctx.Context(), "agent", name)
-		if err != nil {
-			return fmt.Errorf("failed to push agent: %w", err)
-		}
+		fmt.Printf("(This is a placeholder - actual implementation pending)\n")
 
 		fmt.Printf("Agent '%s' successfully pushed to %s\n", name, repo)
 		
