@@ -93,3 +93,8 @@ func (m *manager) GetDatabasePath() string {
 func (m *manager) GetClient() DatabaseClient {
 	return m.client
 }
+
+// GetConfigService returns the config service (for interface compliance)
+func (m *manager) GetConfigService() ConfigService {
+	return m.configService
+}

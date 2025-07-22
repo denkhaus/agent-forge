@@ -75,7 +75,7 @@ func Setup(cfg *config.Config) *do.Injector {
 	// Register database services
 	do.Provide(newInjector, func(i *do.Injector) (database.DatabaseManager, error) {
 		cfg := do.MustInvoke[*config.Config](i)
-		return database.NewManager(cfg)
+		return database.NewManagerWithDI(cfg, newInjector)
 	})
 
 	// Register DatabaseClient through DatabaseManager
@@ -94,6 +94,17 @@ func Setup(cfg *config.Config) *do.Injector {
 	do.Provide(newInjector, func(i *do.Injector) (types.GitHubClient, error) {
 		cfg := do.MustInvoke[*config.Config](i)
 		return github.NewClient(cfg.GitHubToken), nil
+	})
+
+	// Register database services (RepositoryService and ConfigService)
+	do.Provide(newInjector, func(i *do.Injector) (database.RepositoryService, error) {
+		client := do.MustInvoke[database.DatabaseClient](i)
+		return database.NewRepositoryService(client), nil
+	})
+
+	do.Provide(newInjector, func(i *do.Injector) (database.ConfigService, error) {
+		client := do.MustInvoke[database.DatabaseClient](i)
+		return database.NewConfigService(client), nil
 	})
 
 	return newInjector
