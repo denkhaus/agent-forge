@@ -20,4 +20,5 @@ type TUIManager interface {
 	RunPromptCreatorWithName(name string) error
 	RunPromptEditor(name string) error
 	RunPromptVariableEditor(name string, data interface{}) error
+	RunPromptWorkbench(name string) error
 }
