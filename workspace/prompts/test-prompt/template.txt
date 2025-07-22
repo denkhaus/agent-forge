@@ -1,7 +1,0 @@
-# Test Prompt
-
-You are an AI assistant. Please help with the following task:
-
-{{task}}
-
-Please provide a comprehensive and helpful response.

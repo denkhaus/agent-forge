@@ -1,6 +1,0 @@
-apiVersion: agentforge.dev/v1
-kind: Prompt
-metadata:
-  name: code-auditor
-  version: 1.0.0
-  description: AI prompt for code-auditor
