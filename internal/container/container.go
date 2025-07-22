@@ -120,6 +120,18 @@ func Setup(cfg *config.Config) *do.Injector {
 		return prompts.NewPromptService(), nil
 	})
 
+	// Register Tool service
+	do.Provide(newInjector, func(i *do.Injector) (database.ToolService, error) {
+		client := do.MustInvoke[database.DatabaseClient](i)
+		return database.NewToolService(client), nil
+	})
+
+	// Register Agent service
+	do.Provide(newInjector, func(i *do.Injector) (database.AgentService, error) {
+		client := do.MustInvoke[database.DatabaseClient](i)
+		return database.NewAgentService(client), nil
+	})
+
 	return newInjector
 }
 
