@@ -31,7 +31,7 @@ func GetPromptPullCommand() *cli.Command {
 
 // HandlePromptPull handles the prompt pull command.
 func HandlePromptPull() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		args := ctx.CLI.Args()
 		if args.Len() == 0 {
 			return fmt.Errorf("repository required: forge prompt pull <user/repo[@version]>")

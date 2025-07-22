@@ -39,7 +39,7 @@ func GetPromptPushCommand() *cli.Command {
 
 // HandlePromptPush handles the prompt push command.
 func HandlePromptPush() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		name := ctx.CLI.String("name")
 		message := ctx.CLI.String("message")
 		tag := ctx.CLI.String("tag")

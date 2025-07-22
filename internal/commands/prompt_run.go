@@ -38,7 +38,7 @@ func GetPromptRunCommand() *cli.Command {
 
 // HandlePromptRun handles the prompt run command.
 func HandlePromptRun() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		args := ctx.CLI.Args()
 		if args.Len() == 0 {
 			return fmt.Errorf("prompt name required: forge prompt run <prompt-name>")
@@ -78,9 +78,10 @@ func HandlePromptRun() cli.ActionFunc {
 		} else {
 			// Parse variables from command line
 			varMap := make(map[string]string)
-			for _, v := range variables {
+			for _, variable := range variables {
 				// Parse key=value format
 				// TODO: Implement variable parsing
+				_ = variable // Suppress unused variable warning
 			}
 			
 			// Execute prompt with variables
