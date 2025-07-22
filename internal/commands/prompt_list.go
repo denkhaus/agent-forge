@@ -31,7 +31,7 @@ func GetPromptListCommand() *cli.Command {
 
 // HandlePromptList handles the prompt list command.
 func HandlePromptList() cli.ActionFunc {
-	return startup.WithStartup(startup.Minimal(), func(ctx *startup.Context) error {
+	return startup.WithStartup(startup.Minimal()...)(func(ctx *startup.Context) error {
 		minStars := ctx.CLI.Int("stars")
 		localOnly := ctx.CLI.Bool("local")
 		

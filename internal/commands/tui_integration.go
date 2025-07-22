@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"github.com/denkhaus/agentforge/internal/tui"
 	"github.com/denkhaus/agentforge/internal/types"
 )
 
-// getTUIModule returns a TUI module instance
+// getTUIModule returns a TUI module instance (placeholder)
 func getTUIModule() types.TUIManager {
-	return tui.NewTUIManager()
+	// TODO: Implement TUI manager when ready
+	return nil
 }
