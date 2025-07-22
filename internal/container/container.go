@@ -12,6 +12,7 @@ import (
 	"github.com/denkhaus/agentforge/internal/logger"
 	"github.com/denkhaus/agentforge/internal/providers"
 	"github.com/denkhaus/agentforge/internal/session"
+	"github.com/denkhaus/agentforge/internal/tui"
 	"github.com/denkhaus/agentforge/internal/types"
 )
 
@@ -105,6 +106,12 @@ func Setup(cfg *config.Config) *do.Injector {
 	do.Provide(newInjector, func(i *do.Injector) (database.ConfigService, error) {
 		client := do.MustInvoke[database.DatabaseClient](i)
 		return database.NewConfigService(client), nil
+	})
+
+	// Register TUI manager
+	do.Provide(newInjector, func(i *do.Injector) (types.TUIManager, error) {
+		log := do.MustInvoke[*zap.Logger](i)
+		return tui.NewManager(log), nil
 	})
 
 	return newInjector
