@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/denkhaus/agentforge/internal/tui/components"
 	"go.uber.org/zap"
 )
 
@@ -121,39 +122,40 @@ func (m *VariablesModel) Update(msg tea.Msg) (*VariablesModel, tea.Cmd) {
 
 // View renders the variables management interface
 func (m *VariablesModel) View() string {
-	// Create the main layout
+	if m.width < 60 || m.height < 15 {
+		return "Variables: Terminal too small"
+	}
+	
+	// Create enhanced layout with safe styling
 	leftPanel := m.renderVariableList()
 	rightPanel := m.renderVariableEditor()
 	
-	return lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		leftPanel,
-		rightPanel,
-	)
+	return lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, rightPanel)
 }
 
 // renderVariableList renders the list of variables
 func (m *VariablesModel) renderVariableList() string {
+	// Safe styling for variable list
 	listStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("62")).
+		BorderForeground(lipgloss.Color("6")). // Cyan
 		Padding(1).
 		Width(m.width/2 - 2).
 		Height(m.height - 4)
 	
 	var items []string
-	items = append(items, "🔧 Variables")
+	items = append(items, components.SafeColors.Bold + "Variables" + components.SafeColors.Reset)
 	items = append(items, "")
 	
 	for i, variable := range m.variables {
 		prefix := "  "
 		if i == m.selectedIndex {
-			prefix = "▶ "
+			prefix = components.SafeColors.Yellow + "> " + components.SafeColors.Reset
 		}
 		
 		required := ""
 		if variable.Required {
-			required = " *"
+			required = components.SafeColors.Red + " *" + components.SafeColors.Reset
 		}
 		
 		item := fmt.Sprintf("%s%s (%s)%s", prefix, variable.Name, variable.Type, required)
@@ -165,7 +167,7 @@ func (m *VariablesModel) renderVariableList() string {
 	}
 	
 	items = append(items, "")
-	items = append(items, "Commands:")
+	items = append(items, components.SafeColors.Dim + "Commands:" + components.SafeColors.Reset)
 	items = append(items, "  n - New variable")
 	items = append(items, "  d - Delete variable")
 	items = append(items, "  enter - Edit variable")

@@ -70,7 +70,7 @@ func (m *manager) RunPromptVariableEditor(name string, data interface{}) error {
 func (m *manager) RunPromptWorkbench(name string) error {
 	m.logger.Info("Starting prompt workbench TUI", zap.String("name", name))
 	
-	// Create and run the prompt workbench
+	// Create and run the enhanced prompt workbench
 	workbench := NewPromptWorkbench(name, m.logger)
 	
 	program := tea.NewProgram(workbench, tea.WithAltScreen())
