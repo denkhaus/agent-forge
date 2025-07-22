@@ -56,6 +56,31 @@ coverage: test
 	$(GOCMD) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 
+# TUI testing targets
+test-tui-headless:
+	@echo "Running headless TUI tests..."
+	go run ./cmd/test-tui -mode=headless -prompt=test-prompt -duration=5s -verbose
+
+test-tui-automated:
+	@echo "Running automated TUI tests..."
+	go run ./cmd/test-tui -mode=automated -prompt=test-prompt -duration=10s -verbose
+
+test-tui-demo:
+	@echo "Running TUI demo..."
+	go run ./cmd/test-tui -mode=demo -prompt=demo-prompt -duration=15s -verbose
+
+test-tui-interactive:
+	@echo "Running interactive TUI test..."
+	go run ./cmd/test-tui -mode=interactive -prompt=interactive-test -duration=30s -verbose
+
+test-tui-quick:
+	@echo "Running quick TUI test..."
+	./scripts/test-tui.sh quick
+
+test-tui-all:
+	@echo "Running all TUI tests..."
+	./scripts/test-tui.sh all
+
 # Run linter
 lint:
 	@echo "Running linter..."

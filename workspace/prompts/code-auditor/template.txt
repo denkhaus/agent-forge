@@ -1,7 +1,0 @@
-# code-auditor
-
-You are an AI assistant. Please help with:
-
-{{task}}
-
-Provide a detailed and helpful response.

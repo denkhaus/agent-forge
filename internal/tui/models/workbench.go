@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/denkhaus/agentforge/internal/tui/components"
 	"go.uber.org/zap"
 )
 
@@ -243,14 +244,8 @@ func (m *WorkbenchModel) View() string {
 func (m *WorkbenchModel) renderHeader() string {
 	title := fmt.Sprintf("AgentForge Prompt Workbench - %s", m.promptName)
 	
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("205")).
-		Background(lipgloss.Color("235")).
-		Padding(0, 1).
-		Width(m.width)
-	
-	return headerStyle.Render(title)
+	// Use safe lipgloss header
+	return components.LipglossHeader(title, m.width)
 }
 
 // renderTabs renders the tab navigation
@@ -259,23 +254,9 @@ func (m *WorkbenchModel) renderTabs() string {
 	
 	for i := EditorTab; i <= OptimizeTab; i++ {
 		tab := i.String()
-		
-		if i == m.activeTab {
-			// Active tab style
-			style := lipgloss.NewStyle().
-				Bold(true).
-				Foreground(lipgloss.Color("229")).
-				Background(lipgloss.Color("57")).
-				Padding(0, 2)
-			tabs = append(tabs, style.Render(tab))
-		} else {
-			// Inactive tab style
-			style := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("241")).
-				Background(lipgloss.Color("235")).
-				Padding(0, 2)
-			tabs = append(tabs, style.Render(tab))
-		}
+		// Use safe tab styling
+		styledTab := components.LipglossTab(tab, i == m.activeTab)
+		tabs = append(tabs, styledTab)
 	}
 	
 	return lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
