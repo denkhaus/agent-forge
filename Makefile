@@ -1,5 +1,5 @@
 # Git workflow commands
-.PHONY: feature-start feature-sync feature-finish release-start release-finish install-hooks pre-commit-full
+.PHONY: feature-start feature-sync feature-finish release-start release-finish hotfix-start hotfix-finish install-hooks pre-commit-full
 
 # Start a new feature branch
 feature-start:
@@ -110,6 +110,31 @@ release-finish:
 	git push origin $$current_branch && \
 	echo "Release branch ready for PR to main"
 
+# Hotfix workflow commands
+hotfix-start:
+	@echo "Starting hotfix branch..."
+	@read -p "Hotfix description (e.g., critical-security-fix): " description; \
+	if [ -z "$$description" ]; then \
+		echo "Hotfix description cannot be empty"; \
+		exit 1; \
+	fi; \
+	git checkout main && \
+	git pull origin main && \
+	git checkout -b hotfix/$$description && \
+	echo "Hotfix branch hotfix/$$description created from main"
+
+hotfix-finish:
+	@echo "Finishing hotfix..."
+	@current_branch=$$(git branch --show-current); \
+	if [[ ! $$current_branch =~ ^hotfix/ ]]; then \
+		echo "Not on a hotfix branch"; \
+		exit 1; \
+	fi; \
+	$(MAKE) pre-commit-full && \
+	git push origin $$current_branch && \
+	echo "Hotfix branch ready for PR to main" && \
+	echo "Remember to also merge to develop after main merge"
+
 # Pre-commit hook (lighter version)
 pre-commit:
 	@echo "Running pre-commit validation..."
@@ -153,6 +178,8 @@ help:
 	@echo "  feature-finish  - Finish feature development"
 	@echo "  release-start   - Start release branch"
 	@echo "  release-finish  - Complete release"
+	@echo "  hotfix-start    - Start emergency hotfix branch from main"
+	@echo "  hotfix-finish   - Complete hotfix development"
 	@echo "  install-hooks   - Install git hooks"
 	@echo "  check-hooks     - Check hook installation status"
 	@echo "  pre-commit-all  - Run pre-commit on all files"
