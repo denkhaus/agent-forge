@@ -1,6 +1,6 @@
 # Bubble Tea Reference Collection
 
-This directory contains curated code examples and patterns from the official Bubble Tea examples repository, specifically selected for our prompt workbench development.
+This directory contains curated code examples and patterns from the (official Bubble Tea examples)[https://github.com/charmbracelet/bubbletea/tree/main/examples] repository, specifically selected for our prompt workbench development.
 
 ## 📁 Directory Structure
 
@@ -14,6 +14,7 @@ This directory contains curated code examples and patterns from the official Bub
 ## 🎯 Purpose
 
 These examples serve as:
+
 - **Reference Implementation**: Proven patterns for common TUI needs
 - **Learning Resource**: Understanding advanced Bubble Tea techniques
 - **Code Templates**: Starting points for new components
@@ -22,6 +23,7 @@ These examples serve as:
 ## 🚀 Usage
 
 Each directory contains:
+
 - Original example code with comments
 - Adapted versions for our use case
 - Documentation of key patterns
