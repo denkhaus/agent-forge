@@ -1,0 +1,72 @@
+repos:
+  # Go-specific hooks
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      - id: go-vet-mod
+      - id: go-mod-tidy
+      - id: go-unit-tests
+        args: [-timeout=5m]
+      - id: golangci-lint
+        args: [--config=.golangci.yml]
+
+  # General hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Security scanning
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # Custom AgentForge hooks
+  - repo: local
+    hooks:
+      - id: file-size-check
+        name: Check file size constraints
+        entry: ./scripts/check-file-length.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+
+      - id: build-check
+        name: Build verification
+        entry: make
+        args: [build]
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: conventional-commit
+        name: Conventional commit format
+        entry: ./scripts/check-commit-msg.sh
+        language: script
+        stages: [commit-msg]
+        pass_filenames: false
+
+      - id: agentforge-security
+        name: AgentForge security scan
+        entry: make
+        args: [security-scan]
+        language: system
+        pass_filenames: false
+        files: '\.go$'
+
+# Configuration
+default_stages: [commit]
+fail_fast: false
+minimum_pre_commit_version: 3.0.0

@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -85,12 +84,12 @@ func (m ProgressModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ProgressModel) View() string {
 	pad := strings.Repeat(" ", padding)
-	
+
 	status := "In Progress..."
 	if m.complete {
 		status = "Complete!"
 	}
-	
+
 	return "\n" +
 		pad + m.label + "\n" +
 		pad + m.progress.View() + "\n" +
@@ -107,11 +106,11 @@ func tickCmd() tea.Cmd {
 
 // AgentForge Testing Progress Example
 type TestProgressModel struct {
-	progress     progress.Model
-	currentTest  string
-	testsTotal   int
+	progress      progress.Model
+	currentTest   string
+	testsTotal    int
 	testsComplete int
-	results      []TestResult
+	results       []TestResult
 }
 
 type TestResult struct {
@@ -140,38 +139,38 @@ func (m TestProgressModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case testStartMsg:
 		m.currentTest = msg.testName
 		return m, nil
-		
+
 	case testCompleteMsg:
 		m.results = append(m.results, msg.result)
 		m.testsComplete++
-		
+
 		// Key Pattern: Calculate progress percentage
 		percent := float64(m.testsComplete) / float64(m.testsTotal)
 		cmd := m.progress.SetPercent(percent)
-		
+
 		if m.testsComplete >= m.testsTotal {
 			m.currentTest = "All tests complete!"
 		}
-		
+
 		return m, cmd
-		
+
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)
 		return m, cmd
 	}
-	
+
 	return m, nil
 }
 
 func (m TestProgressModel) View() string {
 	pad := strings.Repeat(" ", padding)
-	
+
 	// Progress bar with current test info
 	progressView := pad + fmt.Sprintf("Testing Progress (%d/%d)", m.testsComplete, m.testsTotal) + "\n" +
 		pad + m.progress.View() + "\n" +
 		pad + "Current: " + m.currentTest + "\n\n"
-	
+
 	// Results summary
 	if len(m.results) > 0 {
 		successCount := 0
@@ -180,22 +179,22 @@ func (m TestProgressModel) View() string {
 				successCount++
 			}
 		}
-		
-		progressView += pad + fmt.Sprintf("Results: %d passed, %d failed", 
+
+		progressView += pad + fmt.Sprintf("Results: %d passed, %d failed",
 			successCount, len(m.results)-successCount) + "\n"
 	}
-	
+
 	return progressView
 }
 
 // AgentForge Optimization Progress Example
 type OptimizationProgressModel struct {
-	progress       progress.Model
-	currentStep    string
-	iteration      int
-	maxIterations  int
-	improvements   []float64
-	bestScore      float64
+	progress      progress.Model
+	currentStep   string
+	iteration     int
+	maxIterations int
+	improvements  []float64
+	bestScore     float64
 }
 
 func NewOptimizationProgressModel(maxIter int) OptimizationProgressModel {
@@ -220,33 +219,33 @@ func (m OptimizationProgressModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentStep = msg.step
 		m.iteration++
 		m.improvements = append(m.improvements, msg.score)
-		
+
 		if msg.score > m.bestScore {
 			m.bestScore = msg.score
 		}
-		
+
 		// Key Pattern: Progress based on iterations
 		percent := float64(m.iteration) / float64(m.maxIterations)
 		cmd := m.progress.SetPercent(percent)
-		
+
 		if m.iteration >= m.maxIterations {
 			m.currentStep = "Optimization complete!"
 		}
-		
+
 		return m, cmd
-		
+
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)
 		return m, cmd
 	}
-	
+
 	return m, nil
 }
 
 func (m OptimizationProgressModel) View() string {
 	pad := strings.Repeat(" ", padding)
-	
+
 	return pad + fmt.Sprintf("AI Optimization (Iteration %d/%d)", m.iteration, m.maxIterations) + "\n" +
 		pad + m.progress.View() + "\n" +
 		pad + "Current: " + m.currentStep + "\n" +

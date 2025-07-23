@@ -1,5 +1,3 @@
-
-
 # Git workflow commands
 .PHONY: feature-start feature-sync feature-finish release-start release-finish install-hooks pre-commit-full
 
@@ -122,9 +120,39 @@ pre-commit:
 # Install git hooks
 install-hooks:
 	@echo "Installing git hooks..."
-	@mkdir -p .git/hooks
-	@cp scripts/pre-commit .git/hooks/pre-commit
-	@cp scripts/commit-msg .git/hooks/commit-msg
-	@chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
-	@echo "Git hooks installed"
+	@./scripts/install-hooks.sh
 
+# Check hook status
+check-hooks:
+	@echo "Checking hook installation status..."
+	@if [ -f .git/hooks/pre-commit ]; then echo "Pre-commit hook installed"; else echo "Pre-commit hook missing"; fi
+	@if [ -f .git/hooks/commit-msg ]; then echo "Commit-msg hook installed"; else echo "Commit-msg hook missing"; fi
+	@if command -v pre-commit &> /dev/null; then echo "Pre-commit framework installed"; else echo "Pre-commit framework missing"; fi
+
+# Run pre-commit on all files
+pre-commit-all:
+	@echo "Running pre-commit on all files..."
+	@pre-commit run --all-files
+
+# Help target
+.PHONY: help
+help:
+	@echo "Available targets:"
+	@echo "  build           - Build the application"
+	@echo "  test            - Run tests"
+	@echo "  test-integration - Run integration tests"
+	@echo "  test-tui        - Run TUI tests"
+	@echo "  clean           - Clean build artifacts"
+	@echo "  check-file-length - Check file length constraints"
+	@echo "  pre-commit      - Run pre-commit validation"
+	@echo "  pre-commit-full - Run full pre-commit validation"
+	@echo "  security-scan   - Run security scanning"
+	@echo "  lint            - Run linting"
+	@echo "  feature-start   - Start a new feature branch"
+	@echo "  feature-sync    - Sync feature branch with develop"
+	@echo "  feature-finish  - Finish feature development"
+	@echo "  release-start   - Start release branch"
+	@echo "  release-finish  - Complete release"
+	@echo "  install-hooks   - Install git hooks"
+	@echo "  check-hooks     - Check hook installation status"
+	@echo "  pre-commit-all  - Run pre-commit on all files"
