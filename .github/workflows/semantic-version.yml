@@ -1,0 +1,79 @@
+name: Semantic Version Calculator
+
+on:
+  workflow_call:
+    inputs:
+      base_ref:
+        description: 'Base reference for version calculation'
+        required: false
+        type: string
+        default: 'main'
+    outputs:
+      version:
+        description: 'Calculated semantic version'
+        value: ${{ jobs.calculate-version.outputs.version }}
+      version_type:
+        description: 'Type of version bump (major, minor, patch)'
+        value: ${{ jobs.calculate-version.outputs.version_type }}
+
+jobs:
+  calculate-version:
+    name: Calculate Semantic Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_type: ${{ steps.version.outputs.version_type }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Calculate next version
+        id: version
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+          
+          # Remove 'v' prefix if present
+          CURRENT_VERSION=${LATEST_TAG#v}
+          
+          # Parse current version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          
+          # Default to patch bump
+          VERSION_TYPE="patch"
+          NEW_MAJOR=$MAJOR
+          NEW_MINOR=$MINOR
+          NEW_PATCH=$((PATCH + 1))
+          
+          # Analyze commits since last tag
+          COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s" --no-merges)
+          
+          # Check for breaking changes (major version bump)
+          if echo "$COMMITS" | grep -q "BREAKING CHANGE\|!:"; then
+            VERSION_TYPE="major"
+            NEW_MAJOR=$((MAJOR + 1))
+            NEW_MINOR=0
+            NEW_PATCH=0
+          # Check for new features (minor version bump)
+          elif echo "$COMMITS" | grep -q "^feat"; then
+            VERSION_TYPE="minor"
+            NEW_MINOR=$((MINOR + 1))
+            NEW_PATCH=0
+          fi
+          
+          # Construct new version
+          NEW_VERSION="v${NEW_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
+          
+          echo "Version type: $VERSION_TYPE"
+          echo "New version: $NEW_VERSION"
+          
+          # Set outputs
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_type=$VERSION_TYPE" >> $GITHUB_OUTPUT
+          
+          # Also set as environment variables for other steps
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_ENV

@@ -20,10 +20,31 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Extract version
+      - name: Calculate semantic version
         id: version
+        uses: ./.github/workflows/semantic-version.yml
+      
+      - name: Extract or use calculated version
+        id: final_version
         run: |
-          VERSION=${GITHUB_HEAD_REF#release/}
+          # Try to extract version from branch name first
+          BRANCH_VERSION=${GITHUB_HEAD_REF#release/}
+          
+          # If branch version looks like a semantic version, use it
+          if [[ $BRANCH_VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            VERSION=$BRANCH_VERSION
+            echo "Using branch version: $VERSION"
+          else
+            # Use calculated semantic version
+            VERSION=${{ steps.version.outputs.version }}
+            echo "Using calculated version: $VERSION"
+          fi
+          
+          # Ensure version starts with 'v'
+          if [[ ! $VERSION =~ ^v ]]; then
+            VERSION="v$VERSION"
+          fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       
       - name: Setup Go
@@ -44,14 +65,20 @@ jobs:
       
       - name: Build release binaries
         run: |
+          VERSION=${{ steps.final_version.outputs.version }}
           make build
           mkdir -p release
-          cp bin/forge release/forge-${{ steps.version.outputs.version }}-linux-amd64
           
           # Build for multiple platforms
-          GOOS=darwin GOARCH=amd64 go build -o release/forge-${{ steps.version.outputs.version }}-darwin-amd64 ./cmd
-          GOOS=darwin GOARCH=arm64 go build -o release/forge-${{ steps.version.outputs.version }}-darwin-arm64 ./cmd
-          GOOS=windows GOARCH=amd64 go build -o release/forge-${{ steps.version.outputs.version }}-windows-amd64.exe ./cmd
+          GOOS=linux GOARCH=amd64 go build -o release/forge-${VERSION}-linux-amd64 ./cmd
+          GOOS=darwin GOARCH=amd64 go build -o release/forge-${VERSION}-darwin-amd64 ./cmd
+          GOOS=darwin GOARCH=arm64 go build -o release/forge-${VERSION}-darwin-arm64 ./cmd
+          GOOS=windows GOARCH=amd64 go build -o release/forge-${VERSION}-windows-amd64.exe ./cmd
+          
+          # Generate checksums
+          cd release
+          sha256sum * > checksums.txt
+          cd ..
       
       - name: Generate changelog
         id: changelog
@@ -62,14 +89,22 @@ jobs:
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       
+      - name: Create annotated tag
+        run: |
+          VERSION=${{ steps.final_version.outputs.version }}
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a $VERSION -m "Release $VERSION"
+          git push origin $VERSION
+      
       - name: Create GitHub release
         uses: actions/create-release@v1
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          release_name: Release ${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.final_version.outputs.version }}
+          release_name: Release ${{ steps.final_version.outputs.version }}
           body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
@@ -80,8 +115,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/forge-${{ steps.version.outputs.version }}-linux-amd64
-          asset_name: forge-${{ steps.version.outputs.version }}-linux-amd64
+          asset_path: ./release/forge-${{ steps.final_version.outputs.version }}-linux-amd64
+          asset_name: forge-${{ steps.final_version.outputs.version }}-linux-amd64
           asset_content_type: application/octet-stream
       
       - name: Upload macOS Intel release asset
@@ -90,8 +125,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/forge-${{ steps.version.outputs.version }}-darwin-amd64
-          asset_name: forge-${{ steps.version.outputs.version }}-darwin-amd64
+          asset_path: ./release/forge-${{ steps.final_version.outputs.version }}-darwin-amd64
+          asset_name: forge-${{ steps.final_version.outputs.version }}-darwin-amd64
           asset_content_type: application/octet-stream
       
       - name: Upload macOS ARM release asset
@@ -100,8 +135,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/forge-${{ steps.version.outputs.version }}-darwin-arm64
-          asset_name: forge-${{ steps.version.outputs.version }}-darwin-arm64
+          asset_path: ./release/forge-${{ steps.final_version.outputs.version }}-darwin-arm64
+          asset_name: forge-${{ steps.final_version.outputs.version }}-darwin-arm64
           asset_content_type: application/octet-stream
       
       - name: Upload Windows release asset
@@ -110,6 +145,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/forge-${{ steps.version.outputs.version }}-windows-amd64.exe
-          asset_name: forge-${{ steps.version.outputs.version }}-windows-amd64.exe
+          asset_path: ./release/forge-${{ steps.final_version.outputs.version }}-windows-amd64.exe
+          asset_name: forge-${{ steps.final_version.outputs.version }}-windows-amd64.exe
           asset_content_type: application/octet-stream
+      
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/checksums.txt
+          asset_name: checksums.txt
+          asset_content_type: text/plain

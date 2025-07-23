@@ -1,0 +1,119 @@
+name: Hotfix Release
+
+on:
+  push:
+    branches: [ 'hotfix/*' ]
+  pull_request:
+    branches: [ 'main' ]
+    types: [ closed ]
+
+env:
+  GO_VERSION: '1.24.0'
+
+jobs:
+  hotfix-release:
+    name: Create Hotfix Release
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'hotfix/')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Calculate hotfix version
+        id: version
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+          
+          # Remove 'v' prefix if present
+          CURRENT_VERSION=${LATEST_TAG#v}
+          
+          # Parse current version and increment patch
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          NEW_PATCH=$((PATCH + 1))
+          
+          # Construct new hotfix version
+          NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+          
+          echo "Hotfix version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Build hotfix binaries
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          make build
+          mkdir -p release
+          
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -o release/forge-${VERSION}-linux-amd64 ./cmd
+          GOOS=darwin GOARCH=amd64 go build -o release/forge-${VERSION}-darwin-amd64 ./cmd
+          GOOS=darwin GOARCH=arm64 go build -o release/forge-${VERSION}-darwin-arm64 ./cmd
+          GOOS=windows GOARCH=amd64 go build -o release/forge-${VERSION}-windows-amd64.exe ./cmd
+          
+          # Generate checksums
+          cd release
+          sha256sum * > checksums.txt
+          cd ..
+      
+      - name: Generate hotfix changelog
+        id: changelog
+        run: |
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "## Hotfix Release ${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Fixed" >> $GITHUB_OUTPUT
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~5")..HEAD >> $GITHUB_OUTPUT || echo "- Emergency hotfix" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create annotated tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a $VERSION -m "Hotfix $VERSION"
+          git push origin $VERSION
+      
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Hotfix ${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+      
+      - name: Upload release assets
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          
+          # Upload all binaries and checksums
+          for file in release/*; do
+            filename=$(basename "$file")
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$file" \
+              "${{ steps.create_release.outputs.upload_url }}?name=$filename"
+          done
