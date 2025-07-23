@@ -18,10 +18,10 @@ feature-start:
 feature-sync:
 	@echo "Syncing feature branch with develop..."
 	@current_branch=$$(git branch --show-current); \
-	if [[ ! $$current_branch =~ ^feature/ ]]; then \
-		echo "Not on a feature branch"; \
-		exit 1; \
-	fi; \
+	case "$$current_branch" in \
+		feature/*) ;; \
+		*) echo "Not on a feature branch"; exit 1 ;; \
+	esac; \
 	git fetch origin && \
 	git rebase origin/develop && \
 	echo "Feature branch synced with develop"
@@ -30,10 +30,10 @@ feature-sync:
 feature-finish:
 	@echo "Finishing feature development..."
 	@current_branch=$$(git branch --show-current); \
-	if [[ ! $$current_branch =~ ^feature/ ]]; then \
-		echo "Not on a feature branch"; \
-		exit 1; \
-	fi; \
+	case "$$current_branch" in \
+		feature/*) ;; \
+		*) echo "Not on a feature branch"; exit 1 ;; \
+	esac; \
 	$(MAKE) pre-commit-full && \
 	git push origin $$current_branch && \
 	echo "Feature branch ready for PR"
@@ -102,10 +102,10 @@ release-start:
 release-finish:
 	@echo "Finishing release..."
 	@current_branch=$$(git branch --show-current); \
-	if [[ ! $$current_branch =~ ^release/ ]]; then \
-		echo "Not on a release branch"; \
-		exit 1; \
-	fi; \
+	case "$$current_branch" in \
+		release/*) ;; \
+		*) echo "Not on a release branch"; exit 1 ;; \
+	esac; \
 	$(MAKE) pre-commit-full && \
 	git push origin $$current_branch && \
 	echo "Release branch ready for PR to main"
