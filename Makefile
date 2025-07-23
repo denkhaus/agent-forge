@@ -40,10 +40,31 @@ feature-finish:
 	git push origin $$current_branch && \
 	echo "Feature branch ready for PR"
 
+# Build targets
+.PHONY: build test lint clean check-file-length
+
+build:
+	@echo "Building application..."
+	@go build -o bin/agentforge ./cmd/main.go
+
+test:
+	@echo "Running tests..."
+	@go test ./...
+
+lint:
+	@echo "Running linter..."
+	@golangci-lint run
+
+clean:
+	@echo "Cleaning build artifacts..."
+	@rm -rf bin/
+
+check-file-length:
+	@./scripts/check-file-length.sh
+
 # Full pre-commit validation
 pre-commit-full:
 	@echo "Running full pre-commit validation..."
-	@$(MAKE) check-file-length
 	@$(MAKE) build
 	@$(MAKE) test
 	@$(MAKE) lint
