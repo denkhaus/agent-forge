@@ -1,0 +1,117 @@
+name: PR Automation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  label:
+    name: Auto Label PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Label based on files changed
+        uses: actions/labeler@v4
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/labeler.yml
+      
+      - name: Label based on PR title
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = context.payload.pull_request.title.toLowerCase();
+            const labels = [];
+            
+            if (title.includes('feat') || title.includes('feature')) {
+              labels.push('enhancement');
+            }
+            if (title.includes('fix') || title.includes('bug')) {
+              labels.push('bug');
+            }
+            if (title.includes('docs') || title.includes('documentation')) {
+              labels.push('documentation');
+            }
+            if (title.includes('test')) {
+              labels.push('testing');
+            }
+            if (title.includes('refactor')) {
+              labels.push('refactoring');
+            }
+            if (title.includes('perf') || title.includes('performance')) {
+              labels.push('performance');
+            }
+            if (title.includes('ci') || title.includes('workflow')) {
+              labels.push('ci/cd');
+            }
+            if (title.includes('breaking')) {
+              labels.push('breaking-change');
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: labels
+              });
+            }
+      
+      - name: Add size label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const changes = additions + deletions;
+            
+            let sizeLabel = '';
+            if (changes < 10) {
+              sizeLabel = 'size/XS';
+            } else if (changes < 30) {
+              sizeLabel = 'size/S';
+            } else if (changes < 100) {
+              sizeLabel = 'size/M';
+            } else if (changes < 500) {
+              sizeLabel = 'size/L';
+            } else {
+              sizeLabel = 'size/XL';
+            }
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: [sizeLabel]
+            });
+
+  assign-reviewers:
+    name: Auto Assign Reviewers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Auto assign based on CODEOWNERS
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Check if CODEOWNERS file exists
+            const codeownersPath = '.github/CODEOWNERS';
+            if (fs.existsSync(codeownersPath)) {
+              // For now, assign the PR author as reviewer if no CODEOWNERS
+              // In a real scenario, you'd parse CODEOWNERS and assign accordingly
+              console.log('CODEOWNERS file found, but auto-assignment logic not implemented yet');
+            } else {
+              console.log('No CODEOWNERS file found, skipping auto-assignment');
+            }
