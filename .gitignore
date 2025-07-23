@@ -19,11 +19,12 @@ vendor/
 # Go workspace file
 go.work
 .env
-./commands
-./.agent-os
-./prd
-./prd-deprecated
-./.agent.md
+commands/
+.agent-os/
+prd/
+prd-deprecated/
+prd-critique.md
+.agent.md
 # IDE files
 .vscode/
 .idea/
