@@ -20,9 +20,8 @@ fi
 
 # 1. File size validation
 echo "📏 Checking file sizes..."
-if ! make check-file-length >/dev/null 2>&1; then
+if ! ./scripts/check-file-length.sh; then
     echo "❌ File size check failed"
-    echo "Run 'make check-file-length' to see details"
     exit 1
 fi
 
@@ -50,10 +49,10 @@ if ! make lint >/dev/null 2>&1; then
     exit 1
 fi
 
-# 5. Security check (non-blocking)
+# 5. Security check
 echo "🔒 Running security scan..."
 if ! make security-scan >/dev/null 2>&1; then
-    echo "⚠️  Security scan found issues (non-blocking)"
+    echo "⚠️  Security scan found issues"
     echo "Run 'make security-scan' to see details"
     # Don't fail on security issues, just warn
 fi

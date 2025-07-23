@@ -7,7 +7,8 @@ on:
     branches: [ main, develop ]
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.24.0'
+  COVERAGE_THRESHOLD: 80
 
 jobs:
   lint:
@@ -66,12 +67,23 @@ jobs:
     - name: Run tests
       run: go test -v -race -coverprofile=coverage.out ./...
       
+    - name: Check coverage threshold
+      run: |
+        COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Current coverage: ${COVERAGE}%"
+        if (( $(echo "$COVERAGE < $COVERAGE_THRESHOLD" | bc -l) )); then
+          echo "Coverage ${COVERAGE}% is below threshold ${COVERAGE_THRESHOLD}%"
+          exit 1
+        fi
+        echo "Coverage ${COVERAGE}% meets threshold ${COVERAGE_THRESHOLD}%"
+      
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.out
         flags: unittests
         name: codecov-umbrella
+        fail_ci_if_error: true
 
   security:
     name: Security
@@ -105,6 +117,33 @@ jobs:
       with:
         sarif_file: results.sarif
 
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: go
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -134,5 +173,5 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: mcp-planner-${{ github.sha }}
-        path: bin/mcp-planner
+        name: agent-forge-${{ github.sha }}
+        path: bin/forge

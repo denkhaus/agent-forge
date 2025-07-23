@@ -1,0 +1,49 @@
+# Configuration for automatic labeling of PRs based on file changes
+
+# Core application code
+"area/core":
+  - "internal/**/*"
+  - "cmd/**/*"
+
+# Database related changes
+"area/database":
+  - "internal/database/**/*"
+
+# TUI related changes
+"area/tui":
+  - "internal/tui/**/*"
+
+# CI/CD and workflows
+"ci/cd":
+  - ".github/**/*"
+  - "Makefile"
+  - "scripts/**/*"
+
+# Documentation
+"documentation":
+  - "*.md"
+  - "docs/**/*"
+  - ".agent-os/**/*"
+
+# Configuration
+"configuration":
+  - "*.yml"
+  - "*.yaml"
+  - "*.json"
+  - "*.toml"
+  - ".env*"
+
+# Dependencies
+"dependencies":
+  - "go.mod"
+  - "go.sum"
+
+# Testing
+"testing":
+  - "**/*_test.go"
+  - "test*/**/*"
+
+# Workspace and examples
+"workspace":
+  - "workspace/**/*"
+  - "examples/**/*"

@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    branches: [ 'release/*' ]
+  pull_request:
+    branches: [ 'main' ]
+    types: [ closed ]
+
+env:
+  GO_VERSION: '1.24.0'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_HEAD_REF#release/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Build release binaries
+        run: |
+          make build
+          mkdir -p release
+          cp bin/forge release/forge-${{ steps.version.outputs.version }}-linux-amd64
+          
+          # Build for multiple platforms
+          GOOS=darwin GOARCH=amd64 go build -o release/forge-${{ steps.version.outputs.version }}-darwin-amd64 ./cmd
+          GOOS=darwin GOARCH=arm64 go build -o release/forge-${{ steps.version.outputs.version }}-darwin-arm64 ./cmd
+          GOOS=windows GOARCH=amd64 go build -o release/forge-${{ steps.version.outputs.version }}-windows-amd64.exe ./cmd
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "## What's Changed" >> $GITHUB_OUTPUT
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~10")..HEAD >> $GITHUB_OUTPUT || echo "- Initial release" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+      
+      - name: Upload Linux release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/forge-${{ steps.version.outputs.version }}-linux-amd64
+          asset_name: forge-${{ steps.version.outputs.version }}-linux-amd64
+          asset_content_type: application/octet-stream
+      
+      - name: Upload macOS Intel release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/forge-${{ steps.version.outputs.version }}-darwin-amd64
+          asset_name: forge-${{ steps.version.outputs.version }}-darwin-amd64
+          asset_content_type: application/octet-stream
+      
+      - name: Upload macOS ARM release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/forge-${{ steps.version.outputs.version }}-darwin-arm64
+          asset_name: forge-${{ steps.version.outputs.version }}-darwin-arm64
+          asset_content_type: application/octet-stream
+      
+      - name: Upload Windows release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/forge-${{ steps.version.outputs.version }}-windows-amd64.exe
+          asset_name: forge-${{ steps.version.outputs.version }}-windows-amd64.exe
+          asset_content_type: application/octet-stream
