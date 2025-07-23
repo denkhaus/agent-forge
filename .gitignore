@@ -18,6 +18,11 @@ vendor/
 
 # Go workspace file
 go.work
+.env
+./commands
+./.agent-os
+./prd
+./prd-deprecated
 
 # IDE files
 .vscode/
@@ -44,5 +49,3 @@ Thumbs.db
 
 # Temporary files
 tmp_rovodev_*
-
-/generated/prisma
