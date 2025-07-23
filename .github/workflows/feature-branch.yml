@@ -70,7 +70,7 @@ jobs:
         run: make build
       
       - name: Security scan
-        uses: securecodewarrior/github-action-gosec@master
+        uses: securecodewarrior/github-action-gosec@v1
         with:
           args: '-no-fail -fmt sarif -out results.sarif ./...'
       
@@ -81,7 +81,7 @@ jobs:
         if: always()
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: feature-build-${{ github.sha }}
           path: bin/
