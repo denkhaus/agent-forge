@@ -1,0 +1,61 @@
+#!/bin/sh
+# Pre-commit hook for AgentForge
+
+set -e
+
+echo "🔍 Running pre-commit validation..."
+
+# Check if this is a merge commit
+if git rev-parse -q --verify MERGE_HEAD >/dev/null; then
+    echo "ℹ️  Merge commit detected, skipping pre-commit hooks"
+    exit 0
+fi
+
+# Check for WIP commits
+commit_msg=$(git log --format=%B -n 1 HEAD 2>/dev/null || echo "")
+if echo "$commit_msg" | grep -qi "wip\|work in progress\|fixup\|squash"; then
+    echo "⚠️  WIP commit detected, skipping validation"
+    exit 0
+fi
+
+# 1. File size validation
+echo "📏 Checking file sizes..."
+if ! make check-file-length >/dev/null 2>&1; then
+    echo "❌ File size check failed"
+    echo "Run 'make check-file-length' to see details"
+    exit 1
+fi
+
+# 2. Build validation
+echo "🔨 Building application..."
+if ! make build >/dev/null 2>&1; then
+    echo "❌ Build failed"
+    echo "Run 'make build' to see detailed errors"
+    exit 1
+fi
+
+# 3. Test execution
+echo "🧪 Running tests..."
+if ! make test >/dev/null 2>&1; then
+    echo "❌ Tests failed"
+    echo "Run 'make test' to see detailed errors"
+    exit 1
+fi
+
+# 4. Linting
+echo "🔍 Running linter..."
+if ! make lint >/dev/null 2>&1; then
+    echo "❌ Linting failed"
+    echo "Run 'make lint' to see detailed errors"
+    exit 1
+fi
+
+# 5. Security check (non-blocking)
+echo "🔒 Running security scan..."
+if ! make security-scan >/dev/null 2>&1; then
+    echo "⚠️  Security scan found issues (non-blocking)"
+    echo "Run 'make security-scan' to see details"
+    # Don't fail on security issues, just warn
+fi
+
+echo "✅ All pre-commit checks passed!"

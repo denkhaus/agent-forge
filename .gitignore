@@ -23,7 +23,7 @@ go.work
 ./.agent-os
 ./prd
 ./prd-deprecated
-
+./.agent.md
 # IDE files
 .vscode/
 .idea/
