@@ -1,0 +1,33 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+# Type should be one of the following:
+# * feat: A new feature
+# * fix: A bug fix
+# * docs: Documentation only changes
+# * style: Changes that do not affect the meaning of the code
+# * refactor: A code change that neither fixes a bug nor adds a feature
+# * perf: A code change that improves performance
+# * test: Adding missing tests or correcting existing tests
+# * chore: Changes to the build process or auxiliary tools
+
+# Scope is optional and should be the name of the package affected
+# Examples: tui, database, config, workflow
+
+# Subject should be imperative, lowercase and no period
+# Examples:
+# feat(tui): add prompt optimization feature
+# fix(database): resolve connection timeout issue
+# docs(api): update authentication documentation
+
+# Body should include motivation for the change and contrast with previous behavior
+# Wrap at 72 characters
+
+# Footer should contain any information about Breaking Changes
+# and is also the place to reference GitHub issues that this commit closes
+# Examples:
+# Closes #123
+# BREAKING CHANGE: API endpoint /users now requires authentication

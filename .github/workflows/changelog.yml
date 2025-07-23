@@ -1,0 +1,103 @@
+name: Generate Changelog
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
+
+jobs:
+  changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          # If no tags exist, use initial commit
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+          
+          echo "Generating changelog since $LATEST_TAG"
+          
+          # Generate changelog from conventional commits
+          cat > CHANGELOG_NEW.md << 'EOF'
+          # Changelog
+          
+          All notable changes to this project will be documented in this file.
+          
+          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+          
+          ## [Unreleased]
+          
+          EOF
+          
+          # Parse commits since last tag
+          git log ${LATEST_TAG}..HEAD --pretty=format:"%s" --no-merges | while read -r commit; do
+            case "$commit" in
+              feat:*|feat\(*\):*)
+                echo "### Added" >> CHANGELOG_NEW.md
+                echo "- ${commit#feat*: }" >> CHANGELOG_NEW.md
+                echo "" >> CHANGELOG_NEW.md
+                ;;
+              fix:*|fix\(*\):*)
+                echo "### Fixed" >> CHANGELOG_NEW.md
+                echo "- ${commit#fix*: }" >> CHANGELOG_NEW.md
+                echo "" >> CHANGELOG_NEW.md
+                ;;
+              docs:*|docs\(*\):*)
+                echo "### Documentation" >> CHANGELOG_NEW.md
+                echo "- ${commit#docs*: }" >> CHANGELOG_NEW.md
+                echo "" >> CHANGELOG_NEW.md
+                ;;
+              perf:*|perf\(*\):*)
+                echo "### Performance" >> CHANGELOG_NEW.md
+                echo "- ${commit#perf*: }" >> CHANGELOG_NEW.md
+                echo "" >> CHANGELOG_NEW.md
+                ;;
+              refactor:*|refactor\(*\):*)
+                echo "### Changed" >> CHANGELOG_NEW.md
+                echo "- ${commit#refactor*: }" >> CHANGELOG_NEW.md
+                echo "" >> CHANGELOG_NEW.md
+                ;;
+              *)
+                echo "### Other" >> CHANGELOG_NEW.md
+                echo "- $commit" >> CHANGELOG_NEW.md
+                echo "" >> CHANGELOG_NEW.md
+                ;;
+            esac
+          done
+          
+          # If CHANGELOG.md exists, preserve it
+          if [ -f CHANGELOG.md ]; then
+            # Merge with existing changelog
+            tail -n +8 CHANGELOG.md >> CHANGELOG_NEW.md
+          fi
+          
+          mv CHANGELOG_NEW.md CHANGELOG.md
+      
+      - name: Commit changelog
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changelog changes to commit"
+          else
+            git add CHANGELOG.md
+            git commit -m "docs: update changelog [skip ci]"
+            git push
+          fi

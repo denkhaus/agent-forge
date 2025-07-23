@@ -27,14 +27,42 @@ Brief description of the changes made in this PR.
 
 ## Checklist
 
+### Code Quality
 - [ ] My code follows the project's coding standards
 - [ ] I have performed a self-review of my code
 - [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
+- [ ] Code is properly formatted (gofmt, golangci-lint)
+- [ ] No files exceed 500 line limit (or justified exception documented)
+
+### Testing
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
+- [ ] Integration tests pass (if applicable)
+- [ ] Test coverage meets or exceeds project standards
+
+### Documentation
+- [ ] I have made corresponding changes to the documentation
+- [ ] README.md updated if new features or setup changes
+- [ ] API documentation updated (if applicable)
+- [ ] Changelog entry added (if significant change)
+
+### Security & Performance
+- [ ] My changes generate no new warnings
+- [ ] Security implications have been considered
+- [ ] Performance impact has been evaluated
+- [ ] No sensitive data exposed in logs or responses
+
+### Dependencies & Compatibility
 - [ ] Any dependent changes have been merged and published
+- [ ] New dependencies are justified and documented
+- [ ] Backward compatibility maintained (or breaking changes documented)
+- [ ] Database migrations included (if applicable)
+
+### Review Readiness
+- [ ] PR title follows conventional commit format
+- [ ] PR description clearly explains the changes
+- [ ] Screenshots included for UI changes
+- [ ] Breaking changes are clearly marked and documented
 
 ## Screenshots (if applicable)
 

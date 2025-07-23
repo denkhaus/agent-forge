@@ -1,0 +1,41 @@
+# Global code ownership for AgentForge
+# This file defines code ownership patterns for automatic reviewer assignment
+
+# Default owners for everything
+* @denkhaus
+
+# Core application code
+/cmd/ @denkhaus
+/internal/ @denkhaus
+
+# Database and data layer
+/internal/database/ @denkhaus
+/internal/database/ent/ @denkhaus
+
+# TUI and user interface
+/internal/tui/ @denkhaus
+/internal/session/ @denkhaus
+
+# Configuration and infrastructure
+/internal/config/ @denkhaus
+/internal/container/ @denkhaus
+/.github/ @denkhaus
+
+# Documentation
+*.md @denkhaus
+/docs/ @denkhaus
+/.agent-os/ @denkhaus
+
+# Build and deployment
+Makefile @denkhaus
+/scripts/ @denkhaus
+go.mod @denkhaus
+go.sum @denkhaus
+
+# Git workflow and automation
+/.github/workflows/ @denkhaus
+/.pre-commit-config.yaml @denkhaus
+/.golangci.yml @denkhaus
+
+# Specifications and planning
+/.agent-os/specs/ @denkhaus
